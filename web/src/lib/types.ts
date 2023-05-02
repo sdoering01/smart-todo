@@ -4,6 +4,7 @@ export type ApiTask = {
     description?: string;
     date?: string;  // yyyy-mm-dd (https://en.wikipedia.org/wiki/ISO_8601)
     time?: string;  // hh:mm
+    location?: string;
     nextTaskIds: number[];
 }
 
