@@ -73,12 +73,15 @@ func main() {
 	apiPath := "/api"
 	router := mux.NewRouter()
 
+	// Use API base Path for all routes
+	apiRouter := router.PathPrefix(apiPath).Subrouter()
+
 	// get all tasks
-	router.HandleFunc(apiPath+"/tasks", handleTasksGet).Methods("GET")
+	apiRouter.HandleFunc("/tasks", handleTasksGet).Methods("GET")
 	// Create a new Task
-	router.HandleFunc(apiPath+"/tasks", handleTasksPost).Methods("POST")
+	apiRouter.HandleFunc("/tasks", handleTasksPost).Methods("POST")
 	// get a speical task by an id
-	router.HandleFunc(apiPath+"/tasks/{taskId}", handleSpecialTaskGet).Methods("GET")
+	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTaskGet).Methods("GET")
 
 	srv := &http.Server{
 		Handler:      router,
