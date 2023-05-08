@@ -9,7 +9,7 @@ type Task struct {
 	Location    string `json:"loaction"`
 	Date        string `json:"date"` // yyyy-mm-dd (https://en.wikipedia.org/wiki/ISO_8601)
 	Time        string `json:"time"` // hh:mm
-	NextTastIds []uint `json:"nextTastIds"`
+	NextTaskIds []uint `json:"nextTaskIds"`
 }
 
 // all of Task, but no id
@@ -19,7 +19,7 @@ type CreateTask struct {
 	Location    string `json:"location"`
 	Date        string `json:"date"`
 	Time        string `json:"time"`
-	NextTastIds []uint `json:"nextTastIds"`
+	NextTaskIds []uint `json:"nextTaskIds"`
 }
 
 func ValidateDate(dateStr string) bool {
@@ -56,7 +56,7 @@ func ValidateCreateTask(createTask *CreateTask) bool {
 		createTask.Location,
 		createTask.Date,
 		createTask.Time,
-		createTask.NextTastIds})
+		createTask.NextTaskIds})
 }
 
 func ValidateTask(task *Task) bool {
