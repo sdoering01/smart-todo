@@ -185,6 +185,20 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
+func handleSpecialTasksDelete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["taskId"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		error := make(map[string]string)
+		error["error"] = "Fail to get taskId from requested path"
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(error)
+	}
+
+	fmt.Printf("Delete TaskId: %d\n", id)
+}
+
 func main() {
 	apiPath := "/api"
 	router := mux.NewRouter()
@@ -200,6 +214,8 @@ func main() {
 	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTaskGet).Methods("GET")
 	// Update a path
 	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTasksPatch).Methods("PATCH")
+	// Delete a task
+	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTasksDelete).Methods("DELETE")
 
 	srv := &http.Server{
 		Handler:      router,
