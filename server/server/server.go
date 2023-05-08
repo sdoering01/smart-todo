@@ -5,10 +5,26 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
 )
+
+func handleSpecialTaskGet(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["taskId"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		error := make(map[string]string)
+		error["error"] = "Fail to get taskId from requested path"
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(error)
+	}
+
+	fmt.Printf("TaskId: %d\n", id)
+	json.NewEncoder(w).Encode(Task{0, "Tesk 1", "", "", "", "", []uint{}})
+}
 
 func handleTasksGet(w http.ResponseWriter, r *http.Request) {
 	tasks := []Task{
@@ -26,9 +42,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc(apiPath+"/tasks", handleTasksGet).Methods("GET")
-	// func(w http.ResponseWriter, r *http.Request) {
-	// 	json.NewEncoder(w).Encode(map[string]bool{"ok": true})
-	// })
+	router.HandleFunc(apiPath+"/tasks/{taskId}", handleSpecialTaskGet).Methods("GET")
 
 	srv := &http.Server{
 		Handler:      router,
