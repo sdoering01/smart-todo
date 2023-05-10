@@ -1,0 +1,20 @@
+# config of the created backend
+server:
+  # domain which the backend should bind
+  domain: "localhost"
+  # port on which the backend should listening
+  port: 8080
+  # the base path of the api, must start with / and must not end with /
+  apiPath: "/api"
+# config of the database server to connect with
+database:
+  # domain of the database server
+  domain: "localhost"
+  # the port of the database server
+  port: 5432
+  # name of the databse user
+  username: "username"
+  # password for the database server
+  password: "password"
+  # name of the databse
+  database: "database"

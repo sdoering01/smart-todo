@@ -1,6 +1,10 @@
 package main
 
-import "time"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 type Task struct {
 	Id          uint   `json:"id"`
@@ -20,6 +24,56 @@ type CreateTask struct {
 	Date        string `json:"date"`
 	Time        string `json:"time"`
 	NextTaskIds []uint `json:"nextTaskIds"`
+}
+
+type ArrayAggInt struct {
+	Value []uint
+	Valid bool
+}
+
+func (h *ArrayAggInt) Scan(src any) error {
+	arr, ok := src.([]uint8)
+	if !ok {
+		errorStr := fmt.Sprintf("unsupported Scan, storing driver.Value type %T into type []uint8", src)
+		return errors.New(errorStr)
+	}
+	if string(arr) == "{NULL}" {
+		h.Valid = false
+		return nil
+	}
+	arrLen := len(arr)
+	value := make([]uint, 0)
+	if arr[0] != 123 || arr[arrLen-1] != 125 {
+		return errors.New("unsupported Scan, No grouped Value with {}")
+	}
+	curValueArr := make([]uint, 0)
+	for index, item := range arr {
+		if item == 44 || index == arrLen-1 {
+			var curValue uint = 0
+			curValueArrIdx := 0
+			for i := len(curValueArr) - 1; i >= 0; i-- {
+				v := curValueArr[i]
+				var digitFactor uint = uint(curValueArrIdx * 10)
+				if digitFactor == 0 {
+					digitFactor = 1
+				}
+				curValue += v * digitFactor
+				curValueArrIdx++
+			}
+			value = append(value, curValue)
+			curValueArr = make([]uint, 0)
+		}
+		if index != 0 && index != arrLen-1 && item >= 48 && item <= 57 {
+			curValueArr = append(curValueArr, uint(item-48))
+		}
+	}
+	if len(value) > 0 {
+		h.Value = value
+		h.Valid = true
+	} else {
+		h.Valid = false
+	}
+	return nil
 }
 
 func ValidateDate(dateStr string) bool {

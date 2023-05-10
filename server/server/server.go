@@ -13,11 +13,16 @@ import (
 
 const JSON_CONTENT_TYPE = "application/json"
 
+var config Conf
+var db Db
+
 func handleSpecialTaskGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", JSON_CONTENT_TYPE)
 	vars := mux.Vars(r)
 	idStr := vars["taskId"]
-	id, err := strconv.Atoi(idStr)
+	idInt, err := strconv.Atoi(idStr)
+	var id uint
+	id = uint(idInt)
 	if err != nil {
 		error := make(map[string]string)
 		error["error"] = "Fail to get taskId from requested path"
@@ -25,19 +30,28 @@ func handleSpecialTaskGet(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(error)
 	}
 
-	fmt.Printf("TaskId: %d\n", id)
-	json.NewEncoder(w).Encode(Task{0, "Tesk 1", "", "", "", "", []uint{}})
+	log.Printf("TaskId: %d\n", id)
+	var task Task
+	task, err = db.SelectOneSpecialTasks(id)
+	if err != nil {
+		error := make(map[string]string)
+		error["error"] = fmt.Sprint(err)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(error)
+	} else {
+		json.NewEncoder(w).Encode(task)
+	}
 }
 
 func handleTasksGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", JSON_CONTENT_TYPE)
-	tasks := []Task{
-		{0, "Task 1", "Task 1 Description", "Task 1 Location", "2023-05-06", "18:00", []uint{1}},
-		{1, "Task 2", "", "", "", "", []uint{}},
-	}
-	err := json.NewEncoder(w).Encode(tasks)
+	tasks, err := db.SelectAllTasks()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+	}
+	err = json.NewEncoder(w).Encode(tasks)
+	if err != nil {
+		log.Println(err)
 	}
 }
 
@@ -200,11 +214,21 @@ func handleSpecialTasksDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	apiPath := "/api"
+	err := config.readConfig()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(config)
+	err = db.Connect(config)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer db.Disconnect()
+
 	router := mux.NewRouter()
 
 	// Use API base Path for all routes
-	apiRouter := router.PathPrefix(apiPath).Subrouter()
+	apiRouter := router.PathPrefix(config.Server.ApiPath).Subrouter()
 
 	// get all tasks
 	apiRouter.HandleFunc("/tasks", handleTasksGet).Methods("GET")
@@ -217,9 +241,10 @@ func main() {
 	// Delete a task
 	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTasksDelete).Methods("DELETE")
 
+	addr := fmt.Sprintf("%s:%d", config.Server.Domain, config.Server.Port)
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         "localhost:8080",
+		Addr:         addr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
