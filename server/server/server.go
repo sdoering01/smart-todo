@@ -203,21 +203,30 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 		result["error"] = "Fail to get taskId from requested path"
 		w.WriteHeader(http.StatusNotFound)
 	}
-	json.NewEncoder(w).Encode(result)
+	if _, ok := result["error"]; ok {
+		json.NewEncoder(w).Encode(result)
+	}
 }
 
 func handleSpecialTasksDelete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idStr := vars["taskId"]
-	id, err := strconv.Atoi(idStr)
+	idInt, err := strconv.Atoi(idStr)
+	var id uint
+	id = uint(idInt)
 	if err != nil {
-		error := make(map[string]string)
-		error["error"] = "Fail to get taskId from requested path"
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(error)
+		json.NewEncoder(w).
+			Encode(map[string]string{"error": "Fail to get taskId from requested path"})
 	}
 
-	fmt.Printf("Delete TaskId: %d\n", id)
+	err = db.DeleteTask(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+	} else {
+		log.Printf("Delete TaskId: %d\n", id)
+	}
 }
 
 func main() {

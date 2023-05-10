@@ -9,6 +9,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const VOLATILE_FOREIGN_KEY_ERROR_MSG = "pq: update or delete on table " +
+	"\"tasks\" violates foreign key constraint " +
+	"\"next_task_map_next_task_id_fkey\" on table \"next_task_map\""
+const NO_ROW_IN_OUTPUT_ERROR_MSG = "sql: no rows in result set"
+
 type Db struct {
 	db               *sql.DB
 	regexExpressions struct {
@@ -31,8 +36,12 @@ func (db *Db) Connect(conf Conf) error {
 	if err != nil {
 		return err
 	}
-	db.regexExpressions.regexDateReplace = regexp.MustCompile("^([0-9]{4}-[0-9]{2}-[0-9]{2})T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
-	db.regexExpressions.regexTimeReplace = regexp.MustCompile("^[0-9]{4}-[0-9]{2}-[0-9]{2}T([0-9]{2}:[0-9]{2}):[0-9]{2}Z$")
+	db.regexExpressions.regexDateReplace = regexp.MustCompile(
+		"^([0-9]{4}-[0-9]{2}-[0-9]{2})T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+	)
+	db.regexExpressions.regexTimeReplace = regexp.MustCompile(
+		"^[0-9]{4}-[0-9]{2}-[0-9]{2}T([0-9]{2}:[0-9]{2}):[0-9]{2}Z$",
+	)
 	return nil
 }
 
@@ -166,5 +175,27 @@ func (db *Db) InsertTask(task CreateTask) (uint, error) {
 		}
 	}
 	return id, nil
+}
 
+func (db *Db) DeleteTask(id uint) error {
+	var deleteId uint
+	err := db.db.QueryRow(
+		"DELETE FROM tasks WHERE id = $1 RETURNING id",
+		id,
+	).Scan(&deleteId)
+	if err != nil {
+		if err.Error() == NO_ROW_IN_OUTPUT_ERROR_MSG {
+			return errors.New(fmt.Sprintf("Task %d not found", id))
+		} else if err.Error() == VOLATILE_FOREIGN_KEY_ERROR_MSG {
+			return errors.New(
+				fmt.Sprintf(
+					"Task %d is a follower for another task and must not be delete",
+					id,
+				),
+			)
+		} else {
+			return err
+		}
+	}
+	return nil
 }

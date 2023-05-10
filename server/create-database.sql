@@ -8,7 +8,7 @@ create table tasks (
 );
  
  create table next_task_map (
-  task_id int not null references tasks(id),
+  task_id int not null references tasks(id) on delete cascade,
   next_task_id int not null references tasks(id),
   primary key (task_id, next_task_id)
 );
