@@ -275,17 +275,30 @@ func main() {
 
 	// Use API base Path for all routes
 	apiRouter := router.PathPrefix(config.Server.ApiPath).Subrouter()
+	// CORS middleware
+	apiRouter.Use(func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+			w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
+			w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			handler.ServeHTTP(w, r)
+		})
+	})
 
 	// get all tasks
 	apiRouter.HandleFunc("/tasks", handleTasksGet).Methods("GET")
 	// Create a new Task
-	apiRouter.HandleFunc("/tasks", handleTasksPost).Methods("POST")
+	apiRouter.HandleFunc("/tasks", handleTasksPost).Methods("POST", "OPTIONS")
 	// get a speical task by an id
 	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTaskGet).Methods("GET")
 	// Update a path
-	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTasksPatch).Methods("PATCH")
+	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTasksPatch).Methods("PATCH", "OPTIONS")
 	// Delete a task
-	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTasksDelete).Methods("DELETE")
+	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTasksDelete).Methods("DELETE", "OPTIONS")
 
 	addr := fmt.Sprintf("%s:%d", config.Server.Domain, config.Server.Port)
 	srv := &http.Server{
