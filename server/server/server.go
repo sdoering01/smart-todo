@@ -57,7 +57,7 @@ func handleTasksGet(w http.ResponseWriter, r *http.Request) {
 
 func handleTasksPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", JSON_CONTENT_TYPE)
-	result := make(map[string]string)
+	var error string
 	contentType := r.Header.Get("Content-Type")
 	switch contentType {
 	case JSON_CONTENT_TYPE:
@@ -66,21 +66,28 @@ func handleTasksPost(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			fmt.Println(createTask)
 			if ValidateCreateTask(&createTask) {
-				result["created"] = "2"
+				// create Task
+				id, err := db.InsertTask(createTask)
+				if err != nil {
+					log.Println(err)
+					error = "next task id doesn't exists"
+				} else {
+					json.NewEncoder(w).Encode(map[string]uint{"created": id})
+				}
 			} else {
-				w.WriteHeader(http.StatusBadRequest)
-				result["error"] = "New Task is not valid"
+				error = "New Task is not valid"
 			}
 		} else {
-			fmt.Println(err)
-			w.WriteHeader(http.StatusBadRequest)
-			result["error"] = "Can't parse json body"
+			log.Println(err)
+			error = "Can't parse json body"
 		}
 	default:
-		w.WriteHeader(http.StatusBadRequest)
-		result["error"] = "Content-Type must be 'application/json'"
+		error = "Content-Type must be 'application/json'"
 	}
-	json.NewEncoder(w).Encode(result)
+	if error != "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": error})
+	}
 }
 
 func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
