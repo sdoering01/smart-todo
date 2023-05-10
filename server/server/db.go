@@ -28,7 +28,7 @@ type Db struct {
 
 func (db *Db) Connect(conf Conf) error {
 	connStr := fmt.Sprintf(
-		"host='%s' port=%d user='%s' password='%s' dbname='%s'",
+		"host='%s' port=%d user='%s' password='%s' dbname='%s' sslmode=disable",
 		conf.Database.Domain,
 		conf.Database.Port,
 		conf.Database.Username,
