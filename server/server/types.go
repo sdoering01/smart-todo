@@ -26,6 +26,24 @@ type CreateTask struct {
 	NextTaskIds []uint `json:"nextTaskIds"`
 }
 
+func (task *CreateTask) GetByKey(key string) (interface{}, bool) {
+	if key == "title" {
+		return task.Title, true
+	} else if key == "description" {
+		return task.Description, true
+	} else if key == "location" {
+		return task.Location, true
+	} else if key == "date" {
+		return task.Date, true
+	} else if key == "time" {
+		return task.Time, true
+	} else if key == "nextTaskIds" {
+		return task.NextTaskIds, true
+	} else {
+		return nil, false
+	}
+}
+
 type ArrayAggInt struct {
 	Value []uint
 	Valid bool

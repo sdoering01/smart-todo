@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -30,7 +31,6 @@ func handleSpecialTaskGet(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(error)
 	}
 
-	log.Printf("TaskId: %d\n", id)
 	var task Task
 	task, err = db.SelectOneSpecialTasks(id)
 	if err != nil {
@@ -64,7 +64,6 @@ func handleTasksPost(w http.ResponseWriter, r *http.Request) {
 		var createTask CreateTask
 		err := json.NewDecoder(r.Body).Decode(&createTask)
 		if err == nil {
-			fmt.Println(createTask)
 			if ValidateCreateTask(&createTask) {
 				// create Task
 				id, err := db.InsertTask(createTask)
@@ -95,9 +94,9 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 	result := make(map[string]string)
 	vars := mux.Vars(r)
 	idStr := vars["taskId"]
-	id, err := strconv.Atoi(idStr)
+	idInt, err := strconv.Atoi(idStr)
+	id := uint(idInt)
 	if err == nil {
-		fmt.Printf("Change Task %v\n", id)
 		contentType := r.Header.Get("Content-Type")
 		switch contentType {
 		case JSON_CONTENT_TYPE:
@@ -115,6 +114,9 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 				}
 				description, descriptionExists := patchObj["description"]
 				if descriptionExists {
+					if description == nil {
+						description = ""
+					}
 					if _, ok := description.(string); !ok {
 						w.WriteHeader(http.StatusBadRequest)
 						result["error"] = "description must be a string"
@@ -122,6 +124,9 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 				}
 				location, locationExists := patchObj["location"]
 				if locationExists {
+					if location == nil {
+						location = ""
+					}
 					if _, ok := location.(string); !ok {
 						w.WriteHeader(http.StatusBadRequest)
 						result["error"] = "location must be a string"
@@ -129,6 +134,9 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 				}
 				date, dateExists := patchObj["date"]
 				if dateExists {
+					if date == nil {
+						date = ""
+					}
 					if d, ok := date.(string); ok && !ValidateDate(d) {
 						w.WriteHeader(http.StatusBadRequest)
 						result["error"] = "Date not a valid ISO 8601 string"
@@ -138,7 +146,16 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 
 				time, timeExists := patchObj["time"]
 				if timeExists {
-					if t, ok := time.(string); ok && !ValidateTime(t) {
+					if time == nil {
+						time = ""
+					}
+					if t, ok := time.(string); ok {
+						if !ValidateTime(t) {
+							w.WriteHeader(http.StatusBadRequest)
+							result["error"] = "Time not a valid ISO 8601 string"
+							timeExists = false
+						}
+					} else {
 						w.WriteHeader(http.StatusBadRequest)
 						result["error"] = "Time not a valid ISO 8601 string"
 						timeExists = false
@@ -167,31 +184,46 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 				_, containErrors := result["error"]
 				if !containErrors {
 					// PATCH task
-					fmt.Printf("Update Task %v\n", id)
+					patchTask := CreateTask{}
+					patchKeys := make([]string, 0)
 					if titleExists {
-						fmt.Printf("New title: %v\n", title.(string))
+						patchTask.Title = title.(string)
+						patchKeys = append(patchKeys, "title")
 					}
 					if descriptionExists {
-						fmt.Printf("New description: %v\n", description.(string))
+						patchTask.Description = description.(string)
+						patchKeys = append(patchKeys, "description")
 					}
 					if locationExists {
-						fmt.Printf("New location: %v\n", location.(string))
+						patchTask.Location = location.(string)
+						patchKeys = append(patchKeys, "location")
 					}
 					if dateExists {
-						fmt.Printf("New date: %v\n", date.(string))
+						patchTask.Date = date.(string)
+						patchKeys = append(patchKeys, "date")
 					}
 					if timeExists {
-						fmt.Printf("New time: %v\n", time.(string))
+						patchTask.Time = time.(string)
+						patchKeys = append(patchKeys, "time")
 					}
 					if nextTaskIdsExists {
-						fmt.Printf("New nextTaskIds: %v\n", nextTaskIdsArr)
+						patchTask.NextTaskIds = nextTaskIdsArr
+						patchKeys = append(patchKeys, "nextTaskIds")
 					}
-				} else {
-					fmt.Println(result)
+					err := db.UpdateTask(id, patchTask, patchKeys)
+					if err != nil {
+						log.Println(err)
+						if strings.Contains(err.Error(), "not found to update") {
+							w.WriteHeader(http.StatusNotFound)
+						} else {
+							w.WriteHeader(http.StatusInternalServerError)
+						}
+						result["error"] = err.Error()
+					}
 				}
 
 			} else {
-				fmt.Println(err)
+				log.Println(err)
 				w.WriteHeader(http.StatusBadRequest)
 				result["error"] = "Can't parse json body"
 			}
@@ -224,8 +256,6 @@ func handleSpecialTasksDelete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-	} else {
-		log.Printf("Delete TaskId: %d\n", id)
 	}
 }
 

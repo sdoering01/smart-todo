@@ -5,12 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
 
-const VOLATILE_FOREIGN_KEY_ERROR_MSG = "pq: update or delete on table " +
-	"\"tasks\" violates foreign key constraint " +
+const VOLATILE_FOREIGN_KEY_INSERT_UPDATE_ERROR_MSG = "pq: insert or update " +
+	"on table \"next_task_map\" violates foreign key constraint " +
+	"\"next_task_map_next_task_id_fkey\""
+const VOLATILE_FOREIGN_KEY_DELETE_UPDATE_ERROR_MSG = "pq: update or delete " +
+	"on table \"tasks\" violates foreign key constraint " +
 	"\"next_task_map_next_task_id_fkey\" on table \"next_task_map\""
 const NO_ROW_IN_OUTPUT_ERROR_MSG = "sql: no rows in result set"
 
@@ -67,7 +71,6 @@ func (db *Db) SelectAllTasks() ([]Task, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(task)
 		tasks = append(tasks, task)
 	}
 	return tasks, nil
@@ -158,23 +161,35 @@ func (db *Db) InsertTask(task CreateTask) (uint, error) {
 		return 0, err
 	}
 	if len(task.NextTaskIds) > 0 {
-		insertNextIdsQuery := "INSERT INTO next_task_map VALUES "
-		values := make([]any, 0)
-		var delimiter string
-		for i, nt := range task.NextTaskIds {
-			insertNextIdsQuery += fmt.Sprintf("%s(%d, $%d)", delimiter, id, i+1)
-			values = append(values, nt)
-			if delimiter == "" {
-				delimiter = ", "
-			}
-
-		}
-		_, err = db.db.Query(insertNextIdsQuery, values...)
+		err := db.insertNextTaskIds(id, task.NextTaskIds)
 		if err != nil {
+			db.DeleteTask(id)
 			return 0, err
 		}
 	}
 	return id, nil
+}
+
+func (db *Db) insertNextTaskIds(id uint, nextTaskIds []uint) error {
+	insertNextIdsQuery := "INSERT INTO next_task_map VALUES "
+	values := make([]any, 0)
+	var delimiter string
+	for i, nt := range nextTaskIds {
+		insertNextIdsQuery += fmt.Sprintf("%s(%d, $%d)", delimiter, id, i+1)
+		values = append(values, nt)
+		if delimiter == "" {
+			delimiter = ", "
+		}
+
+	}
+	_, err := db.db.Query(insertNextIdsQuery, values...)
+	if err != nil {
+		if strings.Contains(err.Error(), VOLATILE_FOREIGN_KEY_INSERT_UPDATE_ERROR_MSG) {
+			return errors.New("One as next tasks refererenced tasks not exists")
+		}
+		return err
+	}
+	return nil
 }
 
 func (db *Db) DeleteTask(id uint) error {
@@ -186,7 +201,7 @@ func (db *Db) DeleteTask(id uint) error {
 	if err != nil {
 		if err.Error() == NO_ROW_IN_OUTPUT_ERROR_MSG {
 			return errors.New(fmt.Sprintf("Task %d not found", id))
-		} else if err.Error() == VOLATILE_FOREIGN_KEY_ERROR_MSG {
+		} else if strings.Contains(err.Error(), VOLATILE_FOREIGN_KEY_DELETE_UPDATE_ERROR_MSG) {
 			return errors.New(
 				fmt.Sprintf(
 					"Task %d is a follower for another task and must not be delete",
@@ -196,6 +211,72 @@ func (db *Db) DeleteTask(id uint) error {
 		} else {
 			return err
 		}
+	}
+	return nil
+}
+
+func (db *Db) UpdateTask(id uint, patchTask CreateTask, patchKeys []string) error {
+	var updateId uint
+	query := "UPDATE tasks SET "
+	i := 1
+	var delimiter string
+	values := make([]any, 0)
+	nextTaskIdsIdx := -1
+	for idx, key := range patchKeys {
+		if key != "nextTaskIds" {
+			columnName := key
+			value, ok := patchTask.GetByKey(key)
+			if !ok {
+				return errors.New(fmt.Sprintf("Canot get value for key %s", key))
+			}
+			if key == "date" || key == "time" {
+				columnName = "start_" + key
+				if value == "" {
+					value = sql.NullTime{}
+				}
+			}
+			query += fmt.Sprintf("%s%s = $%d", delimiter, columnName, i)
+			values = append(values, value)
+			if i == 1 {
+				delimiter = ", "
+			}
+			i++
+		} else {
+			nextTaskIdsIdx = idx
+		}
+	}
+	if len(values) > 0 {
+		values = append(values, id)
+		query += fmt.Sprintf(" WHERE id = $%d RETURNING id", i)
+		err := db.db.QueryRow(query, values...).Scan(&updateId)
+		if err != nil {
+			if err.Error() == NO_ROW_IN_OUTPUT_ERROR_MSG {
+				return errors.New(fmt.Sprintf("Task %d not found to update", id))
+			}
+			return err
+		}
+	}
+	// Update references
+	if nextTaskIdsIdx != -1 {
+		var deletedId uint
+		err := db.db.
+			QueryRow("DELETE FROM next_task_map WHERE task_id = $1 RETURNING task_id", id).
+			Scan(&deletedId)
+		if err != nil {
+			if err.Error() != NO_ROW_IN_OUTPUT_ERROR_MSG {
+				return err
+			}
+		}
+		if len(patchTask.NextTaskIds) > 0 {
+			err = db.insertNextTaskIds(id, patchTask.NextTaskIds)
+			if err != nil {
+				if err.Error() == NO_ROW_IN_OUTPUT_ERROR_MSG {
+					return errors.New(fmt.Sprintf("Task %d not found to update", id))
+				}
+				return err
+			}
+		}
+
 	}
 	return nil
 }
