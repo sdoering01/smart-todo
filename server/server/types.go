@@ -18,12 +18,13 @@ type Task struct {
 
 // all of Task, but no id
 type CreateTask struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Location    string `json:"location"`
-	Date        string `json:"date"`
-	Time        string `json:"time"`
-	NextTaskIds []uint `json:"nextTaskIds"`
+	Title           string `json:"title"`
+	Description     string `json:"description"`
+	Location        string `json:"location"`
+	Date            string `json:"date"`
+	Time            string `json:"time"`
+	NextTaskIds     []uint `json:"nextTaskIds"`
+	PreviousTaskIds []uint `json:"previousTaskIds"`
 }
 
 func (task *CreateTask) GetByKey(key string) (interface{}, bool) {
@@ -39,6 +40,8 @@ func (task *CreateTask) GetByKey(key string) (interface{}, bool) {
 		return task.Time, true
 	} else if key == "nextTaskIds" {
 		return task.NextTaskIds, true
+	} else if key == "previousTaskIds" {
+		return task.PreviousTaskIds, true
 	} else {
 		return nil, false
 	}

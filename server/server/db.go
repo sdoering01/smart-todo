@@ -160,6 +160,15 @@ func (db *Db) InsertTask(task CreateTask) (uint, error) {
 	if err != nil {
 		return 0, err
 	}
+	if len(task.PreviousTaskIds) > 0 {
+		for _, pt := range task.PreviousTaskIds {
+			err := db.insertNextTaskIds(pt, []uint{id})
+			if err != nil {
+				db.DeleteTask(id)
+				return 0, err
+			}
+		}
+	}
 	if len(task.NextTaskIds) > 0 {
 		err := db.insertNextTaskIds(id, task.NextTaskIds)
 		if err != nil {

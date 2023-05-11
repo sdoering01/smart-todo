@@ -181,6 +181,26 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 						}
 					}
 				}
+				previousTaskIds, previousTaskIdsExists := patchObj["previousTaskIds"]
+				previousTaskIdsArr := make([]uint, 0)
+				if previousTaskIdsExists {
+					_, ok := previousTaskIds.([]interface{})
+					if ok {
+						completeOk := true
+						for _, item := range previousTaskIds.([]interface{}) {
+							_, curOk := item.(float64)
+							previousTaskIdsArr = append(previousTaskIdsArr, uint(item.(float64)))
+							if !curOk {
+								completeOk = false
+							}
+						}
+						if !completeOk {
+							w.WriteHeader(http.StatusBadRequest)
+							result["error"] = "PreviousTaskIds must be an integer array"
+							previousTaskIdsExists = false
+						}
+					}
+				}
 				_, containErrors := result["error"]
 				if !containErrors {
 					// PATCH task
@@ -209,6 +229,10 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 					if nextTaskIdsExists {
 						patchTask.NextTaskIds = nextTaskIdsArr
 						patchKeys = append(patchKeys, "nextTaskIds")
+					}
+					if previousTaskIdsExists {
+						patchTask.PreviousTaskIds = previousTaskIdsArr
+						patchKeys = append(patchKeys, "previousTaskIds")
 					}
 					err := db.UpdateTask(id, patchTask, patchKeys)
 					if err != nil {
