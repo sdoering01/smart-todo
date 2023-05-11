@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,6 +15,7 @@ const JSON_CONTENT_TYPE = "application/json"
 
 var config Conf
 var db Db
+var logger Logger
 
 func handleSpecialTaskGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", JSON_CONTENT_TYPE)
@@ -47,11 +47,11 @@ func handleTasksGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", JSON_CONTENT_TYPE)
 	tasks, err := db.SelectAllTasks()
 	if err != nil {
-		log.Println(err)
+		logger.Error.Println(err)
 	}
 	err = json.NewEncoder(w).Encode(tasks)
 	if err != nil {
-		log.Println(err)
+		logger.Error.Println(err)
 	}
 }
 
@@ -68,7 +68,7 @@ func handleTasksPost(w http.ResponseWriter, r *http.Request) {
 				// create Task
 				id, err := db.InsertTask(createTask)
 				if err != nil {
-					log.Println(err)
+					logger.Error.Println(err)
 					error = "next task id doesn't exists"
 				} else {
 					json.NewEncoder(w).Encode(map[string]uint{"created": id})
@@ -77,7 +77,7 @@ func handleTasksPost(w http.ResponseWriter, r *http.Request) {
 				error = "New Task is not valid"
 			}
 		} else {
-			log.Println(err)
+			logger.Error.Println(err)
 			error = "Can't parse json body"
 		}
 	default:
@@ -236,7 +236,7 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 					}
 					err := db.UpdateTask(id, patchTask, patchKeys)
 					if err != nil {
-						log.Println(err)
+						logger.Error.Println(err)
 						if strings.Contains(err.Error(), "not found to update") {
 							w.WriteHeader(http.StatusNotFound)
 						} else {
@@ -247,7 +247,7 @@ func handleSpecialTasksPatch(w http.ResponseWriter, r *http.Request) {
 				}
 
 			} else {
-				log.Println(err)
+				logger.Error.Println(err)
 				w.WriteHeader(http.StatusBadRequest)
 				result["error"] = "Can't parse json body"
 			}
@@ -284,14 +284,14 @@ func handleSpecialTasksDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	logger.Init()
 	err := config.readConfig()
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error.Fatalln(err)
 	}
-	fmt.Println(config)
 	err = db.Connect(config)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error.Fatalln(err)
 	}
 	defer db.Disconnect()
 
@@ -331,5 +331,5 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	log.Fatal(srv.ListenAndServe())
+	logger.Error.Fatal(srv.ListenAndServe())
 }

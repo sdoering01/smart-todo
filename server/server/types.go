@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
+	"os"
 	"time"
 )
 
@@ -143,4 +145,16 @@ func ValidateTask(task *Task) bool {
 		}
 	}
 	return false
+}
+
+type Logger struct {
+	Warning *log.Logger
+	Info    *log.Logger
+	Error   *log.Logger
+}
+
+func (logger *Logger) Init() {
+	logger.Info = log.New(os.Stderr, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile|log.Lmsgprefix)
+	logger.Warning = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile|log.Lmsgprefix)
+	logger.Error = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile|log.Lmsgprefix)
 }
