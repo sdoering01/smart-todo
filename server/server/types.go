@@ -12,7 +12,7 @@ type Task struct {
 	Id          uint   `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Location    string `json:"loaction"`
+	Location    string `json:"location"`
 	Date        string `json:"date"` // yyyy-mm-dd (https://en.wikipedia.org/wiki/ISO_8601)
 	Time        string `json:"time"` // hh:mm
 	NextTaskIds []uint `json:"nextTaskIds"`
