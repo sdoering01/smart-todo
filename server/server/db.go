@@ -161,13 +161,14 @@ func (db *Db) InsertTask(task CreateTask) (uint, error) {
 		return 0, err
 	}
 	if len(task.PreviousTaskIds) > 0 {
-		for _, pt := range task.PreviousTaskIds {
-			err := db.insertNextTaskIds(pt, []uint{id})
-			if err != nil {
-				db.DeleteTask(id)
-				return 0, err
-			}
+		err := db.insertPreviousTaskIds(id, task.PreviousTaskIds)
+		// for _, pt := range task.PreviousTaskIds {
+		// 	err := db.insertNextTaskIds(pt, []uint{id})
+		if err != nil {
+			db.DeleteTask(id)
+			return 0, err
 		}
+		// }
 	}
 	if len(task.NextTaskIds) > 0 {
 		err := db.insertNextTaskIds(id, task.NextTaskIds)
@@ -192,6 +193,28 @@ func (db *Db) insertNextTaskIds(id uint, nextTaskIds []uint) error {
 
 	}
 	_, err := db.db.Query(insertNextIdsQuery, values...)
+	if err != nil {
+		if strings.Contains(err.Error(), VOLATILE_FOREIGN_KEY_INSERT_UPDATE_ERROR_MSG) {
+			return errors.New("One as next tasks refererenced tasks not exists")
+		}
+		return err
+	}
+	return nil
+}
+
+func (db *Db) insertPreviousTaskIds(id uint, previousTaskIds []uint) error {
+	insertPreviousIdsQuery := "INSERT INTO next_task_map VALUES "
+	values := make([]any, 0)
+	var delimiter string
+	for i, pt := range previousTaskIds {
+		insertPreviousIdsQuery += fmt.Sprintf("%s($%d, %d)", delimiter, i+1, id)
+		values = append(values, pt)
+		if delimiter == "" {
+			delimiter = ", "
+		}
+
+	}
+	_, err := db.db.Query(insertPreviousIdsQuery, values...)
 	if err != nil {
 		if strings.Contains(err.Error(), VOLATILE_FOREIGN_KEY_INSERT_UPDATE_ERROR_MSG) {
 			return errors.New("One as next tasks refererenced tasks not exists")
@@ -230,9 +253,10 @@ func (db *Db) UpdateTask(id uint, patchTask CreateTask, patchKeys []string) erro
 	i := 1
 	var delimiter string
 	values := make([]any, 0)
-	nextTaskIdsIdx := -1
-	for idx, key := range patchKeys {
-		if key != "nextTaskIds" {
+	nextTaskIdsIdx := false
+	previousTaskIdsIdx := false
+	for _, key := range patchKeys {
+		if key != "nextTaskIds" && key != "previousTaskIds" {
 			columnName := key
 			value, ok := patchTask.GetByKey(key)
 			if !ok {
@@ -251,7 +275,11 @@ func (db *Db) UpdateTask(id uint, patchTask CreateTask, patchKeys []string) erro
 			}
 			i++
 		} else {
-			nextTaskIdsIdx = idx
+			if key == "nextTaskIds" {
+				nextTaskIdsIdx = true
+			} else {
+				previousTaskIdsIdx = true
+			}
 		}
 	}
 	if len(values) > 0 {
@@ -265,8 +293,8 @@ func (db *Db) UpdateTask(id uint, patchTask CreateTask, patchKeys []string) erro
 			return err
 		}
 	}
-	// Update references
-	if nextTaskIdsIdx != -1 {
+	// Update next references
+	if nextTaskIdsIdx {
 		var deletedId uint
 		err := db.db.
 			QueryRow("DELETE FROM next_task_map WHERE task_id = $1 RETURNING task_id", id).
@@ -285,7 +313,27 @@ func (db *Db) UpdateTask(id uint, patchTask CreateTask, patchKeys []string) erro
 				return err
 			}
 		}
-
+	}
+	// Update previous references
+	if previousTaskIdsIdx {
+		var deletedId uint
+		err := db.db.
+			QueryRow("DELETE FROM next_task_map WHERE next_task_id = $1 RETURNING task_id", id).
+			Scan(&deletedId)
+		if err != nil {
+			if err.Error() != NO_ROW_IN_OUTPUT_ERROR_MSG {
+				return err
+			}
+		}
+		if len(patchTask.PreviousTaskIds) > 0 {
+			err = db.insertPreviousTaskIds(id, patchTask.PreviousTaskIds)
+			if err != nil {
+				// if err.Error() == NO_ROW_IN_OUTPUT_ERROR_MSG {
+				// 	return erros.New("Previous Task not exists")
+				// }
+				return err
+			}
+		}
 	}
 	return nil
 }
