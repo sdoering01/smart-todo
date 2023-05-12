@@ -1,7 +1,6 @@
 import { ApiCreateTask, ApiUpdateTask } from "./types";
 
-// TODO: Read from environment variable
-const API_ROOT = "http://localhost:8080/api";
+const API_ROOT = import.meta.env.VITE_API_BASE;
 
 // TODO: Create reusable function for fetching data from the API
 

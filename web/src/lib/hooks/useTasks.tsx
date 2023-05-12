@@ -117,8 +117,6 @@ export function TaskProvider(props: TaskProviderProps) {
         setLoading(true);
         setError(null);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
         let apiTasks;
         try {
             apiTasks = await fetchAllTasks();
