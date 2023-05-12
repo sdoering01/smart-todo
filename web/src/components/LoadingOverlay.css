@@ -1,0 +1,45 @@
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-overlay__card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.loading-overlay__title {
+    margin: 0;
+    margin-bottom: 8px;
+    font-size: 3rem;
+}
+
+.loading-overlay__loading {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.loading-overlay__button {
+    background: var(--gray-700);
+    color: var(--white);
+    cursor: pointer;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+}
+
+@media screen and (min-width: 768px) {
+    .loading-overlay__card {
+        padding: 32px;
+        background: var(--secondary-200);
+    }
+}

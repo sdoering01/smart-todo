@@ -1,0 +1,25 @@
+.error-alert {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    background: var(--error-bg);
+    color: var(--error-fg);
+    border-radius: 8px;
+}
+
+.error-alert__icon {
+    width: 20px;
+    height: 20px;
+}
+
+.error-alert--large {
+    padding: 12px;
+    font-size: 1.2rem;
+    gap: 8px;
+}
+
+.error-alert--large .error-alert__icon {
+    width: 32px;
+    height: 32px;
+}
