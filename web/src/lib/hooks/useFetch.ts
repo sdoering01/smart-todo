@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function useFetch<F extends (...args: any) => Promise<any>>(fetcher: F) {
+export default function useFetch<F extends (...args: any[]) => Promise<any>>(fetcher: F) {
     type FetcherParams = Parameters<F>;
     type FetcherReturn = Awaited<ReturnType<F>>;
 
@@ -14,8 +14,7 @@ export default function useFetch<F extends (...args: any) => Promise<any>>(fetch
         setError(null);
         let serverData;
         try {
-            // TODO: How to type this properly?
-            serverData = await fetcher(...params as any);
+            serverData = await fetcher(...params);
         } catch (err) {
             const errorMessage = (err as Error).message;
             setError(errorMessage);
