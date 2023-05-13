@@ -1,10 +1,10 @@
 .app {
     display: flex;
     flex-direction: column-reverse;
-    height: 100vh;
+    height: 100%;
 }
 
-.app > main {
+.app__main-wrapper {
     flex-grow: 1;
     overflow: auto;
 }
@@ -14,9 +14,9 @@
         flex-direction: column;
     }
 
-    .app > main {
+    .app__main-wrapper > main {
         width: 768px;
-        margin: 32px auto;
-        padding: 8px;
+        margin: 0 auto;
+        padding: 40px 8px;
     }
 }

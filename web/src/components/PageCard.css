@@ -1,3 +1,7 @@
+.page-card {
+    margin-bottom: 32px;
+}
+
 .page-card__body {
     padding: 8px;
     display: flex;
@@ -7,6 +11,7 @@
 
 @media screen and (min-width: 768px) {
     .page-card {
+        margin: 0;
         border-radius: 8px;
         overflow: hidden;
         background: var(--secondary-200);

@@ -13,13 +13,15 @@ function App() {
     return (
         <div className="app">
             {!showLoadingOverlay && <MainMenu />}
-            <main>
-                {
-                    showLoadingOverlay
-                        ? <LoadingOverlay />
-                        : <Outlet />
-                }
-            </main>
+            <div className="app__main-wrapper">
+                <main>
+                    {
+                        showLoadingOverlay
+                            ? <LoadingOverlay />
+                            : <Outlet />
+                    }
+                </main>
+            </div>
         </div>
     );
 }
