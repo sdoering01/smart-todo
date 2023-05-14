@@ -5,7 +5,6 @@ import "./TaskForm.css";
 import useTasks from "../lib/hooks/useTasks";
 import { Task } from "../lib/types";
 import { formatDateISO } from "../lib/date-helpers";
-import { useNavigate } from "react-router-dom";
 import ErrorAlert from "./ErrorAlert";
 
 type SelectedTaskProps = {
@@ -92,8 +91,6 @@ type TaskFormProps = {
 };
 
 function TaskForm({ onSubmit, loading, error, initialTask, actionName }: TaskFormProps) {
-    const navigate = useNavigate();
-
     const [previousTaskIds, setPreviousTaskIds] = useState<number[]>([]);
     const [nextTaskIds, setNextTaskIds] = useState<number[]>([]);
 

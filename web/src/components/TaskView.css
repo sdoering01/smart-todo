@@ -62,13 +62,6 @@
     margin: 0;
 }
 
-.task-view__body {
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
 .task-view__icon-group {
     display: flex;
     align-items: center;

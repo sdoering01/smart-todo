@@ -120,7 +120,7 @@ function TaskView({ taskId }: TaskViewProps) {
 
     return (
         <PageCard header={<TaskViewHeader task={task} />}>
-            <div className="task-view__body">
+            <>
                 <p className="task-view__icon-group">
                     <HiCalendarDays className="task-view__body-icon" /> {task.date ? formatDate(task.date) : "-"}
                 </p>
@@ -141,7 +141,7 @@ function TaskView({ taskId }: TaskViewProps) {
                         )
                         : null
                 }
-            </div>
+            </>
         </PageCard>
     );
 }
