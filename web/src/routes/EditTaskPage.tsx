@@ -42,8 +42,9 @@ function EditTaskPage() {
             return;
         }
 
-        const dateString = taskWithoutId.date ? formatDateISO(taskWithoutId.date) : undefined;
-        const { error } = await call(taskId!, { ...taskWithoutId, date: dateString });
+        const dateString = taskWithoutId.date ? formatDateISO(taskWithoutId.date) : "";
+        const timeString = taskWithoutId.time ?? "";
+        const { error } = await call(taskId!, { ...taskWithoutId, date: dateString, time: timeString });
         if (error == null) {
             updateTask({ ...taskWithoutId, id: taskId! });
             navigate(-1);
