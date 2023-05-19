@@ -1,4 +1,4 @@
-module server
+module smart-todo-server
 
 go 1.19
 
