@@ -126,6 +126,13 @@ export function TaskProvider(props: TaskProviderProps) {
             return;
         }
 
+        // TODO: Remove this once the server properly handles errors
+        if (apiTasks === null) {
+            setError("Failed to fetch tasks (internal server error)");
+            setLoading(false);
+            return;
+        }
+
         const newTasks = transformApiTasks(apiTasks);
         setTasks(newTasks);
 
