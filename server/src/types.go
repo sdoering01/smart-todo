@@ -99,6 +99,14 @@ func (h *ArrayAggInt) Scan(src any) error {
 	return nil
 }
 
+type User struct {
+	Username string `json:"username"`
+	Fullname string `json:"fullname"`
+	Email    string `json:"email"`
+	Password []byte
+	Salt     []byte
+}
+
 func ValidateDate(dateStr string) bool {
 	valid := false
 	if dateStr != "" {

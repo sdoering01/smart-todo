@@ -54,12 +54,12 @@ func (db *Db) Disconnect() error {
 	return err
 }
 
-func (db *Db) SelectAllTasks() ([]Task, error) {
+func (db *Db) SelectAllTasks(user string) ([]Task, error) {
 	rows, err := db.db.Query(
-		"SELECT id, title, description, location," +
-			"start_date, start_time, array_agg(next_task_map.next_task_id) " +
-			"FROM tasks LEFT JOIN next_task_map ON id=next_task_map.task_id " +
-			"GROUP BY id ORDER BY id",
+		"SELECT id, title, description, location,"+
+			"start_date, start_time, array_agg(next_task_map.next_task_id) "+
+			"FROM tasks LEFT JOIN next_task_map ON id=next_task_map.task_id "+
+			"WHERE username= $1 GROUP BY id ORDER BY id", user,
 	)
 	if err != nil {
 		return nil, err
@@ -108,13 +108,13 @@ func parseRowToTask(rows *sql.Rows, db *Db) (Task, error) {
 	return task, nil
 }
 
-func (db *Db) SelectOneSpecialTasks(id uint) (Task, error) {
+func (db *Db) SelectOneSpecialTasks(id uint, user string) (Task, error) {
 	rows, err := db.db.Query(
 		"SELECT id, title, description, location, "+
 			"start_date, start_time, array_agg(next_task_map.next_task_id) "+
 			"FROM tasks "+
 			"LEFT JOIN next_task_map ON id=next_task_map.task_id "+
-			"WHERE id = $1 GROUP BY id ORDER BY id ", id)
+			"WHERE id = $1 AND username = $2 GROUP BY id ORDER BY id ", id, user)
 	if err != nil {
 		return Task{}, err
 	}
@@ -134,7 +134,7 @@ func (db *Db) SelectOneSpecialTasks(id uint) (Task, error) {
 	return Task{}, errors.New(errorStr)
 }
 
-func (db *Db) InsertTask(task CreateTask) (uint, error) {
+func (db *Db) InsertTask(task CreateTask, user string) (uint, error) {
 	var id uint = 0
 	if !ValidateCreateTask(&task) {
 		return 0, errors.New("CreateTask not valid")
@@ -149,8 +149,9 @@ func (db *Db) InsertTask(task CreateTask) (uint, error) {
 	}
 	err := db.db.QueryRow(
 		`INSERT INTO
-		tasks(title, description, location, start_date, start_time)
-		VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+		tasks(username, title, description, location, start_date, start_time)
+		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		user,
 		task.Title,
 		task.Description,
 		task.Location,
@@ -165,7 +166,7 @@ func (db *Db) InsertTask(task CreateTask) (uint, error) {
 		// for _, pt := range task.PreviousTaskIds {
 		// 	err := db.insertNextTaskIds(pt, []uint{id})
 		if err != nil {
-			db.DeleteTask(id)
+			db.DeleteTask(id, user)
 			return 0, err
 		}
 		// }
@@ -173,7 +174,7 @@ func (db *Db) InsertTask(task CreateTask) (uint, error) {
 	if len(task.NextTaskIds) > 0 {
 		err := db.insertNextTaskIds(id, task.NextTaskIds)
 		if err != nil {
-			db.DeleteTask(id)
+			db.DeleteTask(id, user)
 			return 0, err
 		}
 	}
@@ -224,11 +225,11 @@ func (db *Db) insertPreviousTaskIds(id uint, previousTaskIds []uint) error {
 	return nil
 }
 
-func (db *Db) DeleteTask(id uint) error {
+func (db *Db) DeleteTask(id uint, user string) error {
 	var deleteId uint
 	err := db.db.QueryRow(
-		"DELETE FROM tasks WHERE id = $1 RETURNING id",
-		id,
+		"DELETE FROM tasks WHERE id = $1 AND username = $2 RETURNING id",
+		id, user,
 	).Scan(&deleteId)
 	if err != nil {
 		if err.Error() == NO_ROW_IN_OUTPUT_ERROR_MSG {
@@ -336,4 +337,45 @@ func (db *Db) UpdateTask(id uint, patchTask CreateTask, patchKeys []string) erro
 		}
 	}
 	return nil
+}
+
+func (db *Db) insertUser(user User) error {
+	var newUser string
+	err := db.db.QueryRow(
+		`INSERT INTO
+		users(username, fullname, email, password, salt)
+		VALUES ($1, $2, $3, $4, $5) RETURNING username`,
+		user.Username,
+		user.Fullname,
+		user.Email,
+		user.Password,
+		user.Salt,
+	).Scan(&newUser)
+	return err
+}
+
+func (db *Db) getUser(username string) (User, error) {
+	var user User
+	rows, err := db.db.Query(
+		"SELECT username, fullname, email, password, salt FROM users "+
+			"WHERE username= $1 ORDER BY username", username,
+	)
+	if err != nil {
+		return User{}, err
+	}
+	defer rows.Close()
+	count := 0
+	for rows.Next() {
+		if count > 1 {
+			return User{}, errors.New(fmt.Sprintf("User with username %v not found", username))
+		}
+		if err := rows.Scan(&user.Username, &user.Fullname, &user.Email, &user.Password, &user.Salt); err != nil {
+			return User{}, err
+		}
+		count++
+	}
+	if count != 1 {
+		return User{}, errors.New(fmt.Sprintf("User with username %v not found", username))
+	}
+	return user, nil
 }

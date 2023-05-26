@@ -18,3 +18,12 @@ database:
   password: "password"
   # name of the databse
   database: "database"
+# settings which will be used fo simplier debug
+debug:
+  # an inital map with user and token matchs
+  # this will be use to test endpoints, wihtout a first need login
+  # if a login happens, this values will be overwritten
+  # In an production environment, this settings souldn't used
+  # Syntax: token: username
+  # Uncomment to use
+  # tokenMap:
