@@ -14,7 +14,7 @@ type TaskWithLevel = Task & {
 
 type TaskWithLevelMap = Map<number, TaskWithLevel>;
 
-const TASK_CARD_WIDTH = 300;
+const TASK_CARD_WIDTH = 260;
 const TASK_CARD_HEIGHT = 200;
 const GRAPH_PADDING = 20;
 const GRAPH_GAP_HORIZONTAL = 80;
