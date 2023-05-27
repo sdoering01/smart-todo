@@ -9,8 +9,8 @@ import { Task } from "../lib/types";
 import { deleteTask as apiDeleteTask } from "../lib/api";
 
 type TaskActionsMenuProps = {
-    task: Task,
-    openButtonVariant?: "small" | "normal",
+    task: Task;
+    openButtonVariant?: "small" | "normal";
     onSuccessfulDelete?: () => void;
 };
 

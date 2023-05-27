@@ -30,7 +30,7 @@ function calcTaskCardPos(level: number, idxInLevel: number) {
 }
 
 type TaskCardProps = {
-    task: TaskWithLevel,
+    task: TaskWithLevel;
 };
 
 function TaskCard({ task }: TaskCardProps) {
@@ -56,9 +56,9 @@ function TaskCard({ task }: TaskCardProps) {
 }
 
 type TaskDependenciesProps = {
-    tasks: TaskWithLevelMap,
-    widthPx: number,
-    heightPx: number,
+    tasks: TaskWithLevelMap;
+    widthPx: number;
+    heightPx: number;
 };
 
 function TaskDependencies({ tasks, widthPx, heightPx }: TaskDependenciesProps) {
