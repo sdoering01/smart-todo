@@ -1,9 +1,8 @@
-.graph-view-page__title {
-    margin: 0;
-}
-
 .graph__wrapper {
     position: relative;
+    min-width: 100%;
+    min-height: 100%;
+    --selected-color: #f59e0b;
 }
 
 .graph__task-card {
@@ -15,6 +14,11 @@
     --card-header-height: 38px;
     border-radius: var(--card-border-radius);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+
+.graph__task-card--selected {
+    outline: var(--selected-color) solid 4px;
 }
 
 .graph__task-card-header {
@@ -65,4 +69,18 @@
     overflow: auto;
     margin: 0;
     margin-top: 8px;
+}
+
+.graph__dependency-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.graph__task-dependency {
+    stroke: var(--black);
+}
+
+.graph__task-dependency--selected {
+    stroke: var(--selected-color);
 }

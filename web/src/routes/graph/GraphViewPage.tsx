@@ -31,17 +31,25 @@ function calcTaskCardPos(level: number, idxInLevel: number) {
 
 type TaskCardProps = {
     task: TaskWithLevel;
+    selected: boolean;
+    onSelect: () => void;
 };
 
-function TaskCard({ task }: TaskCardProps) {
+function TaskCard({ task, selected, onSelect }: TaskCardProps) {
+    function handleClick(ev: React.MouseEvent) {
+        ev.stopPropagation();
+        onSelect();
+    }
+
     return (
         <div
-            className="graph__task-card"
+            className={`graph__task-card ${selected ? "graph__task-card--selected" : ""}`}
             style={calcTaskCardPos(task.level, task.idxInLevel)}
+            onClick={handleClick}
         >
             <div className="graph__task-card-header">
                 <h3 className="graph__task-card-title">{task.title}</h3>
-                <TaskActionsMenu task={task} openButtonVariant="small" />
+                <TaskActionsMenu task={task} openButtonVariant="small" stopClickPropagation />
             </div>
             <div className="graph__task-card-body">
                 <div className="graph__task-card__date-time-group">
@@ -57,11 +65,12 @@ function TaskCard({ task }: TaskCardProps) {
 
 type TaskDependenciesProps = {
     tasks: TaskWithLevelMap;
+    selectedTaskId: number | null;
     widthPx: number;
     heightPx: number;
 };
 
-function TaskDependencies({ tasks, widthPx, heightPx }: TaskDependenciesProps) {
+function TaskDependencies({ tasks, selectedTaskId, widthPx, heightPx }: TaskDependenciesProps) {
     const dependencies: { from: number, to: number }[] = [];
     for (const task of tasks.values()) {
         task.nextTaskIds.forEach(nextTaskId => {
@@ -69,35 +78,51 @@ function TaskDependencies({ tasks, widthPx, heightPx }: TaskDependenciesProps) {
         });
     }
 
+    const unselectedDependencies: JSX.Element[] = [];
+    const selectedDependencies: JSX.Element[] = [];
+
+    dependencies.forEach(({from, to}) => {
+        const selected = selectedTaskId === from || selectedTaskId === to;
+
+        const fromTask = tasks.get(from)!;
+        const toTask = tasks.get(to)!;
+        const fromCardPos = calcTaskCardPos(fromTask.level, fromTask.idxInLevel);
+        const toCardPos = calcTaskCardPos(toTask.level, toTask.idxInLevel);
+
+        const fromX = fromCardPos.left + TASK_CARD_WIDTH;
+        const fromY = fromCardPos.top + 0.5 * TASK_CARD_HEIGHT;
+        const toX = toCardPos.left;
+        const toY = toCardPos.top + 0.5 * TASK_CARD_HEIGHT;
+
+        const xDiff = toX - fromX;
+        const yDiff = toY - fromY;
+
+        const path = (
+            <path
+                key={from + "-" + to}
+                className={`graph__task-dependency ${selected ? "graph__task-dependency--selected" : ""}`}
+                d={`M${fromX},${fromY} c ${xDiff / 4} 0, ${xDiff / 3} ${yDiff / 4}, ${xDiff / 2} ${yDiff / 2} s ${xDiff / 4} ${yDiff / 2}, ${xDiff / 2} ${yDiff / 2}`}
+                fill="none"
+                strokeWidth={DEPENDENCY_STROKE_WIDTH}
+            />
+        );
+
+        if (selected) {
+            selectedDependencies.push(path);
+        } else {
+            unselectedDependencies.push(path);
+        }
+    });
+
     return (
-        <svg width={widthPx} height={heightPx}>
-            {
-                dependencies.map(({ from, to }) => {
-                    const fromTask = tasks.get(from)!;
-                    const toTask = tasks.get(to)!;
-                    const fromCardPos = calcTaskCardPos(fromTask.level, fromTask.idxInLevel);
-                    const toCardPos = calcTaskCardPos(toTask.level, toTask.idxInLevel);
-
-                    const fromX = fromCardPos.left + TASK_CARD_WIDTH;
-                    const fromY = fromCardPos.top + 0.5 * TASK_CARD_HEIGHT;
-                    const toX = toCardPos.left;
-                    const toY = toCardPos.top + 0.5 * TASK_CARD_HEIGHT;
-
-                    const xDiff = toX - fromX;
-                    const yDiff = toY - fromY;
-
-                    return (
-                        <path
-                            key={from + "-" + to}
-                            stroke="black"
-                            d={`M${fromX},${fromY} c ${xDiff / 4} 0, ${xDiff / 3} ${yDiff / 4}, ${xDiff / 2} ${yDiff / 2} s ${xDiff / 4} ${yDiff / 2}, ${xDiff / 2} ${yDiff / 2}`}
-                            fill="none"
-                            strokeWidth={DEPENDENCY_STROKE_WIDTH}
-                        />
-                    );
-                })
-            }
-        </svg>
+        <>
+            <svg className="graph__dependency-svg" width={widthPx} height={heightPx}>
+                { unselectedDependencies }
+            </svg>
+            <svg className="graph__dependency-svg" width={widthPx} height={heightPx}>
+                { selectedDependencies }
+            </svg>
+        </>
     );
 }
 
@@ -107,6 +132,8 @@ function GraphViewPage() {
     const [validGraph, setValidGraph] = useState<boolean | null>(null);
     const [tasksWithLevel, setTasksWithLevel] = useState<TaskWithLevelMap>(new Map());
     const [graphSize, setGraphSize] = useState({ levels: 0, maxTasksInLevel: 0 });
+
+    const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
     useEffect(() => {
         const valid = isValidGraph(tasks);
@@ -132,6 +159,10 @@ function GraphViewPage() {
         setValidGraph(valid);
     }, [tasks]);
 
+    function handleUnselectTask() {
+        setSelectedTaskId(null);
+    }
+
     if (validGraph === null) {
         return <h2>Loading...</h2>;
     } else if (!validGraph) {
@@ -145,6 +176,7 @@ function GraphViewPage() {
         return (
             <div
                 className="graph__wrapper"
+                onClick={handleUnselectTask}
                 style={{
                     "--task-card-width": `${TASK_CARD_WIDTH}px`,
                     "--task-card-height": `${TASK_CARD_HEIGHT}px`,
@@ -152,8 +184,18 @@ function GraphViewPage() {
                     "height": `${graphHeightPx}px`,
                 } as React.CSSProperties}
             >
-                <TaskDependencies tasks={tasksWithLevel} widthPx={graphWidthPx} heightPx={graphHeightPx} />
-                {Array.from(tasksWithLevel.values()).map((task) => <TaskCard key={task.id} task={task} />)}
+                <TaskDependencies tasks={tasksWithLevel} selectedTaskId={selectedTaskId} widthPx={graphWidthPx} heightPx={graphHeightPx} />
+                {Array.from(tasksWithLevel.values()).map((task) => {
+                    const selected = selectedTaskId === task.id;
+                    return (
+                        <TaskCard
+                            key={task.id}
+                            task={task}
+                            selected={selected}
+                            onSelect={setSelectedTaskId.bind(null, selected ? null : task.id)}
+                        />
+                    );
+                })}
             </div>
         );
     }

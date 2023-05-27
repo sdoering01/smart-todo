@@ -12,9 +12,10 @@ type TaskActionsMenuProps = {
     task: Task;
     openButtonVariant?: "small" | "normal";
     onSuccessfulDelete?: () => void;
+    stopClickPropagation?: boolean;
 };
 
-function TaskActionsMenu({ task, openButtonVariant, onSuccessfulDelete }: TaskActionsMenuProps) {
+function TaskActionsMenu({ task, openButtonVariant, onSuccessfulDelete, stopClickPropagation }: TaskActionsMenuProps) {
     const { deleteTask } = useTasks();
 
     const { call } = useFetch(apiDeleteTask);
@@ -37,8 +38,11 @@ function TaskActionsMenu({ task, openButtonVariant, onSuccessfulDelete }: TaskAc
     }
 
     return (
-        <div className="task-actions-menu" ref={actionsContainer}>
-            <button className={`task-actions-menu__open-button ${openButtonVariant === "small" ? "task-actions-menu__open-button--small" : ""}`} onClick={() => actionsContainer.current!.focus()}>
+        <div className="task-actions-menu" ref={actionsContainer} onClick={stopClickPropagation ? (ev) => ev.stopPropagation() : undefined}>
+            <button
+                className={`task-actions-menu__open-button ${openButtonVariant === "small" ? "task-actions-menu__open-button--small" : ""}`}
+                onClick={() => actionsContainer.current!.focus()}
+            >
                 <HiEllipsisHorizontal className="task-actions-menu__open-icon" />
             </button>
             <menu className="task-actions-menu__actions">
