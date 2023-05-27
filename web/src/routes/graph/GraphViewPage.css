@@ -1,3 +1,67 @@
 .graph-view-page__title {
     margin: 0;
 }
+
+.graph__wrapper {
+    position: relative;
+}
+
+.graph__task-card {
+    position: absolute;
+    width: var(--task-card-width);
+    height: var(--task-card-height);
+    background: var(--secondary-200);
+    --card-border-radius: 8px;
+    --card-header-height: 38px;
+    border-radius: var(--card-border-radius);
+}
+
+.graph__task-card-header {
+    border-top-left-radius: var(--card-border-radius);
+    border-top-right-radius: var(--card-border-radius);
+    background: var(--secondary-300);
+    padding: 8px;
+    height: var(--card-header-height);
+    display: flex;
+    align-items: center;
+}
+
+.graph__task-card-title {
+    margin: 0;
+}
+
+.graph__task-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    height: calc(100% - var(--card-header-height));
+}
+
+.graph__task-card-body p {
+    margin: 0;
+}
+
+.graph__task-card__date-time-group {
+    display: flex;
+    align-items: center;
+}
+
+.graph__task-card__date-time-group > * {
+    flex: 1 0 0;
+}
+
+.graph__task-card__icon-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.graph__task-card__body-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.graph__task-card-description {
+    overflow: auto;
+}

@@ -10,6 +10,7 @@ import useFetch from "../lib/hooks/useFetch";
 import { deleteTask as apiDeleteTask } from "../lib/api";
 import PageCard from "./PageCard";
 import PageHeader from "./PageHeader";
+import { getRootTasks } from "../lib/graph-tools";
 
 type NextTaskListProps = {
     tasks: Task[];
@@ -92,7 +93,7 @@ function TaskView({ taskId }: TaskViewProps) {
     }, [taskId]);
 
     if (taskId == null) {
-        const rootTasks = Array.from(tasks.values()).filter(task => task.previousTaskIds.length === 0);
+        const rootTasks = getRootTasks(tasks);
 
         return (
             <PageCard header={<TaskViewHeader />}>
