@@ -90,7 +90,7 @@ function TaskDependencies({ tasks, widthPx, heightPx }: TaskDependenciesProps) {
                         <path
                             key={from + "-" + to}
                             stroke="black"
-                            d={`M${fromX},${fromY} c ${xDiff / 2} 0, ${xDiff / 2} ${yDiff / 4}, ${xDiff / 2} ${yDiff / 2} s 0 ${yDiff / 2}, ${xDiff / 2} ${yDiff / 2}`}
+                            d={`M${fromX},${fromY} c ${xDiff / 4} 0, ${xDiff / 3} ${yDiff / 4}, ${xDiff / 2} ${yDiff / 2} s ${xDiff / 4} ${yDiff / 2}, ${xDiff / 2} ${yDiff / 2}`}
                             fill="none"
                             strokeWidth={DEPENDENCY_STROKE_WIDTH}
                         />
