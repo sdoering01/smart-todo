@@ -28,7 +28,8 @@
 
 .task-actions-menu__actions {
     position: absolute;
-    top: calc(50% + 4px);
+    top: calc(100% + 4px);
+    margin: 0;
     right: 0;
     display: none;
     list-style: none;
