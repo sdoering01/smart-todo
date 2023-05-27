@@ -1,16 +1,15 @@
-import { useEffect, useRef } from "react";
-import { HiChevronRight, HiEllipsisHorizontal, HiCalendarDays, HiOutlineClock, HiOutlineMapPin } from "react-icons/hi2";
+import { useEffect } from "react";
+import { HiChevronRight, HiCalendarDays, HiOutlineClock, HiOutlineMapPin } from "react-icons/hi2";
 import { Link, useNavigate } from "react-router-dom";
 
 import "./TaskView.css";
 import useTasks from "../lib/hooks/useTasks";
 import { Task } from "../lib/types";
 import { formatDate } from "../lib/date-helpers";
-import useFetch from "../lib/hooks/useFetch";
-import { deleteTask as apiDeleteTask } from "../lib/api";
 import PageCard from "./PageCard";
 import PageHeader from "./PageHeader";
 import { getRootTasks } from "../lib/graph-tools";
+import TaskActionsMenu from "./TaskActionsMenu";
 
 type NextTaskListProps = {
     tasks: Task[];
@@ -36,42 +35,17 @@ type TaskViewHeaderProps = {
 }
 
 function TaskViewHeader({ task }: TaskViewHeaderProps) {
-    const { deleteTask } = useTasks();
     const navigate = useNavigate();
-    const { call } = useFetch(apiDeleteTask);
-
-    const actionsContainer = useRef<HTMLDivElement | null>(null);
-
-    async function handleDelete() {
-        const { error } = await call(task!.id);
-        if (error) {
-            console.error(error);
-            alert(error);
-            return;
-        }
-
-        deleteTask(task!);
-        navigate("/list");
-    }
 
     if (task == null) {
         return <PageHeader startContent={<h1 className="task-view__title">Root Tasks</h1>} />;
     }
 
-
     return (
         <PageHeader
             startContent={<h1 className="task-view__title">{task.title}</h1>}
             endContent={
-                <div className="task-view__header-actions" ref={actionsContainer}>
-                    <button className="task-view__open-actions-button" onClick={() => actionsContainer.current!.focus()}>
-                        <HiEllipsisHorizontal className="task-view__open-actions-icon" />
-                    </button>
-                    <menu className="task-view__actions-menu">
-                        <li className="task-view__action-item"><Link to={`/editTask/${task.id}`} className="task-view__action-button">Edit</Link></li>
-                        <li className="task-view__action-item"><button onClick={handleDelete} className="task-view__action-button">Delete</button></li>
-                    </menu>
-                </div>
+                <TaskActionsMenu task={task} onSuccessfulDelete={() => navigate("/list")} />
             }
             withBackButton
         />

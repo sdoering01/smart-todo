@@ -6,6 +6,7 @@ import useTasks from "../../lib/hooks/useTasks";
 import { calcTaskLevels, isValidGraph } from "../../lib/graph-tools";
 import { Task } from "../../lib/types";
 import { formatDate } from "../../lib/date-helpers";
+import TaskActionsMenu from "../../components/TaskActionsMenu";
 
 type TaskWithLevel = Task & {
     level: number;
@@ -40,6 +41,7 @@ function TaskCard({ task }: TaskCardProps) {
         >
             <div className="graph__task-card-header">
                 <h3 className="graph__task-card-title">{task.title}</h3>
+                <TaskActionsMenu task={task} openButtonVariant="small" />
             </div>
             <div className="graph__task-card-body">
                 <div className="graph__task-card__date-time-group">

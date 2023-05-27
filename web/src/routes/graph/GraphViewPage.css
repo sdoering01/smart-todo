@@ -25,6 +25,7 @@
     height: var(--card-header-height);
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .graph__task-card-title {
