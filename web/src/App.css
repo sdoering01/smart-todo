@@ -4,7 +4,7 @@
     height: 100%;
 }
 
-.app__main-wrapper {
+main {
     flex-grow: 1;
     overflow: auto;
 }
@@ -12,11 +12,5 @@
 @media screen and (min-width: 768px) {
     .app {
         flex-direction: column;
-    }
-
-    .app__main-wrapper > main {
-        width: 768px;
-        margin: 0 auto;
-        padding: 40px 8px;
     }
 }
