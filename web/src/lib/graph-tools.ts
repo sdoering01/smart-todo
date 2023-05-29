@@ -67,6 +67,10 @@ export function calcTaskLevels(graph: TaskMap): number[][] {
         levels[level] = ids;
     }
 
+    for (const level of levels) {
+        level.sort((a, b) => a - b);
+    }
+
     return levels;
 }
 
