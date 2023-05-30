@@ -6,6 +6,8 @@ server:
   port: 8080
   # the base path of the api, must start with / and must not end with /
   apiPath: "/api"
+  # time to live of a token in days
+  tokenTTL: 7
 # config of the database server to connect with
 database:
   # domain of the database server

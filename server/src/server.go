@@ -20,7 +20,7 @@ const JSON_CONTENT_TYPE = "application/json"
 var config Conf
 var db Db
 var logger Logger
-var tokenUserMap map[string]string
+var tokenUserMap map[string]TokenUser
 
 func handleSpecialTaskGet(w http.ResponseWriter, r *http.Request) {
 	user := r.Header.Get("username")
@@ -408,7 +408,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 			writeError(w, fmt.Sprintf("fail to get token: %v", err.Error()), http.StatusInternalServerError)
 		}
 		tokenStr := hex.EncodeToString(token)
-		tokenUserMap[tokenStr] = username
+		tokenUserMap[tokenStr] = NewTokenUser(username)
 		user, err := db.getUser(username)
 		if err != nil {
 			logger.Error.Println(err)
@@ -454,23 +454,24 @@ func getSalt(size int) ([]byte, error) {
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger.Info.Println(r.RequestURI)
 		autorization := r.Header.Get("Authorization")
 		if len(autorization) == 0 {
 			logger.Error.Println("no authorization given")
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{"error": "no authorization given"})
 		} else {
-			logger.Info.Println(autorization)
 			token := strings.Split(autorization, " ")
 			if len(token) == 2 && token[0] == "Bearer" {
 				token := token[1]
-				logger.Info.Println(token)
 				user, ok := tokenUserMap[token]
 				if ok {
+					if user.expired(config.Server.TokenTTL) {
+						writeError(w, "token expired", http.StatusUnauthorized)
+						return
+					}
 					logger.Info.Printf("user: %v\n", user)
 					r.Header.Del("username")
-					r.Header.Add("username", user)
+					r.Header.Add("username", user.User)
 					next.ServeHTTP(w, r)
 				} else {
 					w.WriteHeader(http.StatusUnauthorized)
@@ -509,10 +510,11 @@ func main() {
 		logger.Error.Fatalln(err)
 	}
 	defer db.Disconnect()
+	tokenUserMap = make(map[string]TokenUser)
 	if config.Debug.TokenMap != nil {
-		tokenUserMap = config.Debug.TokenMap
-	} else {
-		tokenUserMap = make(map[string]string)
+		for token, user := range config.Debug.TokenMap {
+			tokenUserMap[token] = NewTokenUser(user)
+		}
 	}
 
 	router := mux.NewRouter()

@@ -107,6 +107,27 @@ type User struct {
 	Salt     []byte
 }
 
+type TokenUser struct {
+	User       string
+	CreateDate time.Time
+}
+
+func (t *TokenUser) expired(ttl int) bool {
+	ttlDuration, err := time.ParseDuration(fmt.Sprintf("%dh", 24*ttl))
+	if err != nil {
+		logger.Error.Println(err)
+		return false
+	}
+	if time.Now().Sub(t.CreateDate) > ttlDuration {
+		return true
+	}
+	return false
+}
+
+func NewTokenUser(username string) TokenUser {
+	return TokenUser{username, time.Now()}
+}
+
 func ValidateDate(dateStr string) bool {
 	valid := false
 	if dateStr != "" {

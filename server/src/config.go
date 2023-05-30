@@ -9,9 +9,10 @@ import (
 
 type Conf struct {
 	Server struct {
-		Domain  string `yaml:"domain"`
-		Port    int    `yaml:"port"`
-		ApiPath string `yaml:"apiPath"`
+		Domain   string `yaml:"domain"`
+		Port     int    `yaml:"port"`
+		ApiPath  string `yaml:"apiPath"`
+		TokenTTL int    `yaml:"tokenTTL"`
 	} `yaml:"server"`
 	Database struct {
 		Domain   string `yaml:"domain"`
