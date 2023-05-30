@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router-dom";
+import { LoaderFunctionArgs, Navigate, useLoaderData, useNavigate } from "react-router-dom";
 
 import "./EditTaskPage.css";
 import TaskForm from "../components/TaskForm";
@@ -25,14 +24,8 @@ function EditTaskPage() {
     const { tasks, updateTask } = useTasks();
     const { call, loading, error } = useFetch(apiUpdateTask);
 
-    useEffect(() => {
-        if (taskId == null || tasks.get(taskId) == null) {
-            navigate("/list", { replace: true });
-        }
-    }, [taskId]);
-
     if (taskId == null || tasks.get(taskId) == null) {
-        return null;
+        return <Navigate to="/list" replace={true} />;
     }
 
     const task = tasks.get(taskId)!;

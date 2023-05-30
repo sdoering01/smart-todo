@@ -1,11 +1,7 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 function Index() {
-    const navigate = useNavigate();
-    useEffect(() => navigate("/list", { replace: true }), []);
-
-    return null;
+    return <Navigate to="/list" replace={true} />;
 }
 
 export default Index;

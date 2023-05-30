@@ -1,6 +1,5 @@
-import { useEffect } from "react";
 import { HiChevronRight, HiCalendarDays, HiOutlineClock, HiOutlineMapPin } from "react-icons/hi2";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import "./TaskView.css";
 import useTasks from "../lib/hooks/useTasks";
@@ -58,13 +57,10 @@ type TaskViewProps = {
 
 function TaskView({ taskId }: TaskViewProps) {
     const { tasks } = useTasks();
-    const navigate = useNavigate();
 
-    useEffect(() => {
-        if (taskId != null && tasks.get(taskId) == null) {
-            navigate("/list", { replace: true });
-        }
-    }, [taskId]);
+    if (taskId != null && tasks.get(taskId) == null) {
+        return <Navigate to="/list" replace={true} />;
+    }
 
     if (taskId == null) {
         const rootTasks = getRootTasks(tasks);
