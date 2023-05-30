@@ -3,6 +3,24 @@
     min-width: 100%;
     min-height: 100%;
     --selected-color: #f59e0b;
+    margin-right: 24px;
+}
+
+.graph__mobile-header {
+    z-index: 10;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    display: flex;
+}
+
+.graph__mobile-header__logout-wrapper {
+    margin-left: auto;
+    border-bottom-left-radius: 8px;
+    overflow: hidden;
+    pointer-events: all;
 }
 
 .graph__task-card {
@@ -83,4 +101,14 @@
 
 .graph__task-dependency--selected {
     stroke: var(--selected-color);
+}
+
+@media screen and (min-width: 786px) {
+    .graph__wrapper {
+        margin: 0;
+    }
+
+    .graph__mobile-header {
+        display: none;
+    }
 }

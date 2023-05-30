@@ -1,5 +1,6 @@
 import { HiChevronLeft } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
+import LogoutButton from "./LogoutButton";
 
 import "./PageHeader.css";
 
@@ -22,7 +23,10 @@ function PageHeader({ withBackButton, startContent, endContent }: PageHeaderProp
                 )}
                 {startContent}
             </div>
-            <div className="page-header__end-group">{endContent}</div>
+            <div className="page-header__end-group">
+                <span className="page-header__logout-wrapper"><LogoutButton /></span>
+                {endContent}
+            </div>
         </header>
     );
 }

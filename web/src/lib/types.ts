@@ -1,3 +1,13 @@
+export type ApiLogin = {
+    username: string;
+    password: string;
+}
+
+export type ApiRegister = ApiLogin & {
+    email: string;
+    fullname: string;
+}
+
 export type ApiTask = {
     id: number;
     title: string;

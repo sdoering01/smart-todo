@@ -1,12 +1,12 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { HiEllipsisHorizontal } from "react-icons/hi2";
 
 import "./TaskActionsMenu.css";
-import useFetch from "../lib/hooks/useFetch";
 import useTasks from "../lib/hooks/useTasks";
 import { Task } from "../lib/types";
 import { deleteTask as apiDeleteTask } from "../lib/api";
+import useApi from "../lib/hooks/useApi";
 
 type TaskActionsMenuProps = {
     task: Task;
@@ -18,15 +18,14 @@ type TaskActionsMenuProps = {
 function TaskActionsMenu({ task, openButtonVariant, onSuccessfulDelete, stopClickPropagation }: TaskActionsMenuProps) {
     const { deleteTask } = useTasks();
 
-    const { call } = useFetch(apiDeleteTask);
+    const { call, error } = useApi(apiDeleteTask);
 
     const actionsContainer = useRef<HTMLDivElement | null>(null);
 
     async function handleDelete() {
         const { error } = await call(task!.id);
         if (error) {
-            console.error(error);
-            alert(error);
+            // Handle error in useEffect below, so that token expiration doesn't cause an alert
             return;
         }
 
@@ -36,6 +35,13 @@ function TaskActionsMenu({ task, openButtonVariant, onSuccessfulDelete, stopClic
             onSuccessfulDelete();
         }
     }
+
+    useEffect(() => {
+        if (error !== null) {
+            console.error(error);
+            alert(error);
+        }
+    }, [error]);
 
     return (
         <div className="task-actions-menu" ref={actionsContainer} onClick={stopClickPropagation ? (ev) => ev.stopPropagation() : undefined}>

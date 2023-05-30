@@ -1,0 +1,19 @@
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-600);
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.logout-button__icon {
+    height: 24px;
+    width: 24px;
+}
+
+.logout-button--round {
+  border-radius: 8px;
+}

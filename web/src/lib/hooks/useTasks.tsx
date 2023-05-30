@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { fetchAllTasks } from "../api";
 
+import { fetchAllTasks } from "../api";
 import { Task, TaskMap, transformApiTasks } from "../types";
+import useApi from "./useApi";
+import useAuth from "./useAuth";
 
 const TaskContext = createContext<{
     tasks: TaskMap,
@@ -60,9 +62,11 @@ function removeTaskId(tasks: TaskMap, taskId: number, nextTaskIds: number[], pre
 type TaskProviderProps = React.PropsWithChildren;
 
 export function TaskProvider(props: TaskProviderProps) {
-    const [loading, setLoading] = useState(true);
+    const { loading, error, call } = useApi(fetchAllTasks, { initialLoading: true });
     const [tasks, setTasks] = useState<TaskMap>(new Map());
-    const [error, setError] = useState<string | null>(null);
+
+
+    const { loggedIn } = useAuth();
 
     const addTask = useCallback((newTask: Task) => {
         setTasks(prev => {
@@ -114,34 +118,18 @@ export function TaskProvider(props: TaskProviderProps) {
     }, [setTasks]);
 
     async function fetchTasks() {
-        setLoading(true);
-        setError(null);
-
-        let apiTasks;
-        try {
-            apiTasks = await fetchAllTasks();
-        } catch (err) {
-            setError((err as Error).message);
-            setLoading(false);
-            return;
+        const { error, data } = await call();
+        if (error === null) {
+            const newTasks = transformApiTasks(data);
+            setTasks(newTasks);
         }
-
-        // TODO: Remove this once the server properly handles errors
-        if (apiTasks === null) {
-            setError("Failed to fetch tasks (internal server error)");
-            setLoading(false);
-            return;
-        }
-
-        const newTasks = transformApiTasks(apiTasks);
-        setTasks(newTasks);
-
-        setLoading(false);
     }
 
     useEffect(() => {
-        fetchTasks();
-    }, []);
+        if (loggedIn) {
+            fetchTasks();
+        }
+    }, [loggedIn]);
 
     return (
         <TaskContext.Provider value={{

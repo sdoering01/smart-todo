@@ -4,6 +4,7 @@ import { DiGitBranch } from "react-icons/di";
 import { Link, NavLink } from "react-router-dom";
 
 import "./MainMenu.css";
+import LogoutButton from "./LogoutButton";
 
 type MenuItemProps = {
     Icon: IconType;
@@ -44,6 +45,9 @@ function MainMenu() {
                             <HiPlus className="main-menu__add-icon" />
                             <span className="main-menu__add-label">Add Task</span>
                         </Link>
+                    </span>
+                    <span className="main-menu__logout-wrapper">
+                        <LogoutButton />
                     </span>
                 </div>
             </div>

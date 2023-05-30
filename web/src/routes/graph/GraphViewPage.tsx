@@ -7,6 +7,7 @@ import { calcTaskLevels, isValidGraph } from "../../lib/graph-tools";
 import { Task } from "../../lib/types";
 import { formatDate } from "../../lib/date-helpers";
 import TaskActionsMenu from "../../components/TaskActionsMenu";
+import LogoutButton from "../../components/LogoutButton";
 
 type TaskWithLevel = Task & {
     level: number;
@@ -27,6 +28,18 @@ function calcTaskCardPos(level: number, idxInLevel: number) {
         top: GRAPH_PADDING + idxInLevel * (TASK_CARD_HEIGHT + GRAPH_GAP_VERTICAL),
         left: GRAPH_PADDING + level * (TASK_CARD_WIDTH + GRAPH_GAP_HORIZONTAL),
     };
+}
+
+function GraphMobileHeader() {
+    // TODO: Add warning that view isn't optimized for mobile
+
+    return (
+        <header className="graph__mobile-header">
+            <span className="graph__mobile-header__logout-wrapper">
+                <LogoutButton round={false} />
+            </span>
+        </header>
+    );
 }
 
 type TaskCardProps = {
@@ -184,6 +197,7 @@ function GraphViewPage() {
                     "height": `${graphHeightPx}px`,
                 } as React.CSSProperties}
             >
+                <GraphMobileHeader />
                 <TaskDependencies tasks={tasksWithLevel} selectedTaskId={selectedTaskId} widthPx={graphWidthPx} heightPx={graphHeightPx} />
                 {Array.from(tasksWithLevel.values()).map((task) => {
                     const selected = selectedTaskId === task.id;

@@ -5,10 +5,10 @@ import TaskForm from "../components/TaskForm";
 import useTasks from "../lib/hooks/useTasks";
 import { Task } from "../lib/types";
 import { updateTask as apiUpdateTask } from "../lib/api";
-import useFetch from "../lib/hooks/useFetch";
 import { formatDateISO } from "../lib/date-helpers";
 import PageCard from "../components/PageCard";
 import PageHeader from "../components/PageHeader";
+import useApi from "../lib/hooks/useApi";
 
 type LoaderData = {
     taskId: number | null;
@@ -22,7 +22,7 @@ function EditTaskPage() {
     const { taskId } = useLoaderData() as LoaderData;
     const navigate = useNavigate();
     const { tasks, updateTask } = useTasks();
-    const { call, loading, error } = useFetch(apiUpdateTask);
+    const { call, loading, error } = useApi(apiUpdateTask);
 
     if (taskId == null || tasks.get(taskId) == null) {
         return <Navigate to="/list" replace={true} />;

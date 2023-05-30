@@ -71,3 +71,26 @@ body,
 button {
     font-family: inherit;
 }
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-form__submit-button {
+    background: var(--secondary-500);
+    color: var(--white);
+    border: none;
+    margin-top: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.auth-form__switch-form {
+    margin: 0;
+    margin-top: 16px;
+}

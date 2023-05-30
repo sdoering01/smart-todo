@@ -10,11 +10,23 @@ import AddTaskPage from "./routes/AddTaskPage";
 import EditTaskPage, { loader as editTaskLoader } from "./routes/EditTaskPage";
 import { TaskProvider } from "./lib/hooks/useTasks";
 import GraphViewPage from "./routes/graph/GraphViewPage";
+import { AuthProvider } from "./lib/hooks/useAuth";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LoginPage from "./routes/LoginPage";
+import RegisterPage from "./routes/RegisterPage";
 
 const router = createBrowserRouter([
     {
+        path: "/login",
+        element: <LoginPage />,
+    },
+    {
+        path: "/register",
+        element: <RegisterPage />,
+    },
+    {
         path: "/",
-        element: <App />,
+        element: <ProtectedRoute element={<App />} />,
         children: [
             {
                 index: true,
@@ -49,8 +61,10 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-        <TaskProvider>
-            <RouterProvider router={router} />
-        </TaskProvider>
+        <AuthProvider>
+            <TaskProvider>
+                <RouterProvider router={router} />
+            </TaskProvider>
+        </AuthProvider>
     </React.StrictMode>,
 )

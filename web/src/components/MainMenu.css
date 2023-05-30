@@ -76,6 +76,10 @@
     display: none;
 }
 
+.main-menu__logout-wrapper {
+    display: none;
+}
+
 @media screen and (min-width: 768px) {
     .main-menu {
         box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.5);
@@ -147,6 +151,7 @@
         display: flex;
         justify-content: right;
         flex: 1 0 0;
+        gap: 4px;
     }
 
     .main-menu__add-item {
@@ -174,5 +179,9 @@
     .main-menu__add-link {
         padding: 4px;
         background: var(--gray-700);
+    }
+
+    .main-menu__logout-wrapper {
+        display: block;
     }
 }
