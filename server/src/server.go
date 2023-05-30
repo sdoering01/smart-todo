@@ -551,15 +551,15 @@ func main() {
 	apiRouter.Use(authMiddleware)
 
 	// update user information
-	apiRouter.HandleFunc("/user", handleUserInfo).Methods("GET")
+	apiRouter.HandleFunc("/user", handleUserInfo).Methods("GET", "OPTIONS")
 	// logout
-	apiRouter.HandleFunc("/logout", handleLogout).Methods("GET")
+	apiRouter.HandleFunc("/logout", handleLogout).Methods("GET", "OPTIONS")
 	// get all tasks
-	apiRouter.HandleFunc("/tasks", handleTasksGet).Methods("GET")
+	apiRouter.HandleFunc("/tasks", handleTasksGet).Methods("GET", "OPTIONS")
 	// Create a new Task
 	apiRouter.HandleFunc("/tasks", handleTasksPost).Methods("POST", "OPTIONS")
 	// get a speical task by an id
-	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTaskGet).Methods("GET")
+	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTaskGet).Methods("GET", "OPTIONS")
 	// Update a path
 	apiRouter.HandleFunc("/tasks/{taskId}", handleSpecialTasksPatch).Methods("PATCH", "OPTIONS")
 	// Delete a task
