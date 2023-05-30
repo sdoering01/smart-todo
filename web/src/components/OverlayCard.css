@@ -1,4 +1,4 @@
-.loading-overlay {
+.overlay-card__wrapper {
     position: fixed;
     inset: 0;
     z-index: 10;
@@ -10,7 +10,7 @@
     padding: 16px;
 }
 
-.loading-overlay__card {
+.overlay-card {
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -18,14 +18,14 @@
     border-radius: 8px;
 }
 
-.loading-overlay__title {
+.overlay-card__title {
     margin: 0;
     margin-bottom: 8px;
     font-size: 3rem;
 }
 
 @media screen and (min-width: 768px) {
-    .loading-overlay__card {
+    .overlay-card__title {
         padding: 32px;
         background: var(--secondary-200);
     }

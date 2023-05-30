@@ -4,9 +4,9 @@ type OverlayCardProps = React.PropsWithChildren;
 
 function OverlayCard({ children }: OverlayCardProps) {
     return (
-        <div className="loading-overlay">
-            <div className="loading-overlay__card">
-                <h1 className="loading-overlay__title">Smart Todo</h1>
+        <div className="overlay-card__wrapper">
+            <div className="overlay-card">
+                <h1 className="overlay-card__title">Smart Todo</h1>
                 {children}
             </div>
         </div>
