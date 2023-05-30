@@ -411,6 +411,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		tokenUserMap[tokenStr] = username
 		user, err := db.getUser(username)
 		if err != nil {
+			logger.Error.Println(err)
 			writeError(w, "Failed to load user from database", http.StatusInternalServerError)
 			return
 		}
@@ -425,6 +426,20 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, "Log in failed. Wrong credentials", http.StatusUnauthorized)
 		return
 	}
+}
+
+func handleUserInfo(w http.ResponseWriter, r *http.Request) {
+	username := r.Header.Get("username")
+	user, err := db.getUser(username)
+	if err != nil {
+		writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	result := make(map[string]string)
+	result["username"] = username
+	result["fullname"] = user.Fullname
+	result["email"] = user.Email
+	json.NewEncoder(w).Encode(result)
 }
 
 func getHashedPasswd(password, salt []byte) []byte {
@@ -520,6 +535,8 @@ func main() {
 	// Authentifiaction middleware
 	apiRouter.Use(authMiddleware)
 
+	// update user information
+	apiRouter.HandleFunc("/user", handleUserInfo).Methods("GET")
 	// get all tasks
 	apiRouter.HandleFunc("/tasks", handleTasksGet).Methods("GET")
 	// Create a new Task
