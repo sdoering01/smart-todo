@@ -49,6 +49,10 @@ func (conf *Conf) readConfig() error {
 		conf.Server.ApiPath = "/api"
 		logger.Warning.Println("backend api path not set, use \"/api\"")
 	}
+	if conf.Server.TokenTTL == 0 {
+		conf.Server.TokenTTL = 7
+		logger.Warning.Println("token time to life not set, use 7 days")
+	}
 	if conf.Database.Domain == "" {
 		conf.Database.Domain = "localhost"
 		logger.Warning.Println("database domain not set, use \"localhost\"")

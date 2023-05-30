@@ -359,7 +359,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.Info.Printf("Register user %v\n", username)
-	json.NewEncoder(w).Encode(map[string]string{"message": fmt.Sprintf("register %v successfull", username)})
+	handleLoginTokenAction(w, username)
 
 }
 
@@ -403,29 +403,33 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	hashedPasswd := getHashedPasswd([]byte(password), user.Salt)
 	if bytes.Equal(user.Password, hashedPasswd) {
 		logger.Info.Printf("Logged in as %v", username)
-		token, err := getSalt(32)
-		if err != nil {
-			writeError(w, fmt.Sprintf("fail to get token: %v", err.Error()), http.StatusInternalServerError)
-		}
-		tokenStr := hex.EncodeToString(token)
-		tokenUserMap[tokenStr] = NewTokenUser(username)
-		user, err := db.getUser(username)
-		if err != nil {
-			logger.Error.Println(err)
-			writeError(w, "Failed to load user from database", http.StatusInternalServerError)
-			return
-		}
-		result := make(map[string]string)
-		result["message"] = "Logged in successful"
-		result["token"] = tokenStr
-		result["fullname"] = user.Fullname
-		result["email"] = user.Email
-		json.NewEncoder(w).Encode(result)
+		handleLoginTokenAction(w, username)
 	} else {
 		logger.Info.Println("Log in failed. ")
 		writeError(w, "Log in failed. Wrong credentials", http.StatusUnauthorized)
 		return
 	}
+}
+
+func handleLoginTokenAction(w http.ResponseWriter, username string) {
+	token, err := getSalt(32)
+	if err != nil {
+		writeError(w, fmt.Sprintf("fail to get token: %v", err.Error()), http.StatusInternalServerError)
+	}
+	tokenStr := hex.EncodeToString(token)
+	tokenUserMap[tokenStr] = NewTokenUser(username)
+	user, err := db.getUser(username)
+	if err != nil {
+		logger.Error.Println(err)
+		writeError(w, "Failed to load user from database", http.StatusInternalServerError)
+		return
+	}
+	result := make(map[string]string)
+	result["message"] = "Logged in successful"
+	result["token"] = tokenStr
+	result["fullname"] = user.Fullname
+	result["email"] = user.Email
+	json.NewEncoder(w).Encode(result)
 }
 
 func handleUserInfo(w http.ResponseWriter, r *http.Request) {
@@ -440,6 +444,11 @@ func handleUserInfo(w http.ResponseWriter, r *http.Request) {
 	result["fullname"] = user.Fullname
 	result["email"] = user.Email
 	json.NewEncoder(w).Encode(result)
+}
+
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("token")
+	delete(tokenUserMap, token)
 }
 
 func getHashedPasswd(password, salt []byte) []byte {
@@ -472,6 +481,10 @@ func authMiddleware(next http.Handler) http.Handler {
 					logger.Info.Printf("user: %v\n", user)
 					r.Header.Del("username")
 					r.Header.Add("username", user.User)
+					if r.RequestURI == fmt.Sprintf("%v/logout", config.Server.ApiPath) {
+						r.Header.Del("token")
+						r.Header.Add("token", token)
+					}
 					next.ServeHTTP(w, r)
 				} else {
 					w.WriteHeader(http.StatusUnauthorized)
@@ -539,6 +552,8 @@ func main() {
 
 	// update user information
 	apiRouter.HandleFunc("/user", handleUserInfo).Methods("GET")
+	// logout
+	apiRouter.HandleFunc("/logout", handleLogout).Methods("GET")
 	// get all tasks
 	apiRouter.HandleFunc("/tasks", handleTasksGet).Methods("GET")
 	// Create a new Task
