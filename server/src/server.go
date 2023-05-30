@@ -447,6 +447,7 @@ func authMiddleware(next http.Handler) http.Handler {
 				user, ok := tokenUserMap[token]
 				if ok {
 					logger.Info.Printf("user: %v\n", user)
+					r.Header.Del("username")
 					r.Header.Add("username", user)
 					next.ServeHTTP(w, r)
 				} else {
