@@ -409,10 +409,17 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		}
 		tokenStr := hex.EncodeToString(token)
 		tokenUserMap[tokenStr] = username
-		json.NewEncoder(w).Encode(map[string]string{
-			"message": "Logged in successful",
-			"token":   tokenStr,
-		})
+		user, err := db.getUser(username)
+		if err != nil {
+			writeError(w, "Failed to load user from database", http.StatusInternalServerError)
+			return
+		}
+		result := make(map[string]string)
+		result["message"] = "Logged in successful"
+		result["token"] = tokenStr
+		result["fullname"] = user.Fullname
+		result["email"] = user.Email
+		json.NewEncoder(w).Encode(result)
 	} else {
 		logger.Info.Println("Log in failed. ")
 		writeError(w, "Log in failed. Wrong credentials", http.StatusUnauthorized)
@@ -487,7 +494,11 @@ func main() {
 		logger.Error.Fatalln(err)
 	}
 	defer db.Disconnect()
-	tokenUserMap = config.Debug.TokenMap
+	if config.Debug.TokenMap != nil {
+		tokenUserMap = config.Debug.TokenMap
+	} else {
+		tokenUserMap = make(map[string]string)
+	}
 
 	router := mux.NewRouter()
 
