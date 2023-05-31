@@ -25,7 +25,7 @@
 }
 
 @media screen and (min-width: 768px) {
-    .overlay-card__title {
+    .overlay-card {
         padding: 32px;
         background: var(--secondary-200);
     }
