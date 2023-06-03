@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { HiCalendarDays, HiOutlineClock, HiOutlineMapPin } from "react-icons/hi2";
+import { HiCalendarDays, HiOutlineClock, HiOutlineMapPin, HiXMark, HiOutlineExclamationCircle } from "react-icons/hi2";
 
 import "./GraphViewPage.css";
 import useTasks from "../../lib/hooks/useTasks";
@@ -31,10 +31,17 @@ function calcTaskCardPos(level: number, idxInLevel: number) {
 }
 
 function GraphMobileHeader() {
-    // TODO: Add warning that view isn't optimized for mobile
+    const [warningShown, setWarningShown] = useState(true);
 
     return (
         <header className="graph__mobile-header">
+            {warningShown && (
+                <div className="graph__mobile-header-warning">
+                    <HiOutlineExclamationCircle />
+                    <span>The graph view is not optimized for mobile use, consider using a larger screen</span>
+                    <button onClick={() => setWarningShown(false)}><HiXMark /></button>
+                </div>
+            )}
             <span className="graph__mobile-header__logout-wrapper">
                 <LogoutButton round={false} />
             </span>

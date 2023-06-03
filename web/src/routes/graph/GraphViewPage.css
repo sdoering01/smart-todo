@@ -14,6 +14,40 @@
     right: 0;
     pointer-events: none;
     display: flex;
+    flex-direction: column;
+}
+
+.graph__mobile-header-warning {
+    pointer-events: all;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: var(--secondary-300);
+}
+
+.graph__mobile-header-warning > svg {
+    width: 24px;
+    height: 24px;
+}
+
+.graph__mobile-header-warning > span {
+    flex: 1;
+}
+
+.graph__mobile-header-warning > button {
+    border: none;
+    padding: 4px;
+    background: var(--secondary-500);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.graph__mobile-header-warning > button > svg {
+    width: 24px;
+    height: 24px;
 }
 
 .graph__mobile-header__logout-wrapper {
