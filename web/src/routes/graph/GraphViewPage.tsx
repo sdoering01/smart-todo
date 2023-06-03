@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { HiCalendarDays, HiOutlineClock, HiOutlineMapPin, HiXMark, HiOutlineExclamationCircle } from "react-icons/hi2";
+import { HiCalendarDays, HiOutlineClock, HiOutlineMapPin, HiXMark, HiOutlineExclamationCircle, HiOutlineArrowLongRight } from "react-icons/hi2";
 
 import "./GraphViewPage.css";
 import useTasks from "../../lib/hooks/useTasks";
@@ -8,6 +8,7 @@ import { Task } from "../../lib/types";
 import { formatDate } from "../../lib/date-helpers";
 import TaskActionsMenu from "../../components/TaskActionsMenu";
 import LogoutButton from "../../components/LogoutButton";
+import { Link } from "react-router-dom";
 
 type TaskWithLevel = Task & {
     level: number;
@@ -17,7 +18,8 @@ type TaskWithLevel = Task & {
 type TaskWithLevelMap = Map<number, TaskWithLevel>;
 
 const TASK_CARD_WIDTH = 260;
-const TASK_CARD_HEIGHT = 200;
+const TASK_CARD_HEIGHT = 38;
+const TASK_CARD_EXPANDED_HEIGHT = 200;
 const GRAPH_PADDING = 20;
 const GRAPH_GAP_HORIZONTAL = 80;
 const GRAPH_GAP_VERTICAL = 40;
@@ -78,14 +80,17 @@ function TaskCard({ task, selected, onSelect }: TaskCardProps) {
                 <h3 className="graph__task-card-title">{task.title}</h3>
                 <TaskActionsMenu task={task} openButtonVariant="small" stopClickPropagation />
             </div>
-            <div className="graph__task-card-body">
-                <div className="graph__task-card__date-time-group">
-                    <p className="graph__task-card__icon-group"><HiCalendarDays className="graph__task-card__body-icon" /> {task.date ? formatDate(task.date) : "-"}</p>
-                    <p className="graph__task-card__icon-group"><HiOutlineClock className="graph__task-card__body-icon" /> {task.time || "-"}</p>
+            {selected && (
+                <div className="graph__task-card-body">
+                    <div className="graph__task-card__date-time-group">
+                        <p className="graph__task-card__icon-group"><HiCalendarDays className="graph__task-card__body-icon" /> {task.date ? formatDate(task.date) : "-"}</p>
+                        <p className="graph__task-card__icon-group"><HiOutlineClock className="graph__task-card__body-icon" /> {task.time || "-"}</p>
+                    </div>
+                    <p className="graph__task-card__icon-group"><HiOutlineMapPin className="graph__task-card__body-icon" /> {task.location || "-"}</p>
+                    <p className="graph__task-card-description">{task.description || null}</p>
+                    <Link to={`/list/${task.id}`} className="graph__task-card-link">View in List <HiOutlineArrowLongRight /></Link>
                 </div>
-                <p className="graph__task-card__icon-group"><HiOutlineMapPin className="graph__task-card__body-icon" /> {task.location || "-"}</p>
-                {task.description ? <p className="graph__task-card-description">{task.description}</p> : null}
-            </div>
+            )}
         </div>
     );
 }
@@ -198,7 +203,7 @@ function GraphViewPage() {
         // TODO: Catch empty graph case
 
         const graphWidthPx = 2 * GRAPH_PADDING + graphSize.levels * TASK_CARD_WIDTH + (graphSize.levels - 1) * GRAPH_GAP_HORIZONTAL;
-        const graphHeightPx = 2 * GRAPH_PADDING + graphSize.maxTasksInLevel * TASK_CARD_HEIGHT + (graphSize.maxTasksInLevel - 1) * GRAPH_GAP_VERTICAL;
+        const graphHeightPx = 2 * GRAPH_PADDING + graphSize.maxTasksInLevel * TASK_CARD_HEIGHT + (graphSize.maxTasksInLevel - 1) * GRAPH_GAP_VERTICAL + TASK_CARD_EXPANDED_HEIGHT - TASK_CARD_HEIGHT;
 
         return (
             <div
@@ -207,6 +212,7 @@ function GraphViewPage() {
                 style={{
                     "--task-card-width": `${TASK_CARD_WIDTH}px`,
                     "--task-card-height": `${TASK_CARD_HEIGHT}px`,
+                    "--task-card-expanded-height": `${TASK_CARD_EXPANDED_HEIGHT}px`,
                     "width": `${graphWidthPx}px`,
                     "height": `${graphHeightPx}px`,
                 } as React.CSSProperties}

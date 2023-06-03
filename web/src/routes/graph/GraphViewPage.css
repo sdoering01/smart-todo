@@ -71,17 +71,23 @@
 
 .graph__task-card--selected {
     outline: var(--selected-color) solid 4px;
+    height: var(--task-card-expanded-height);
+    z-index: 1;
 }
 
 .graph__task-card-header {
-    border-top-left-radius: var(--card-border-radius);
-    border-top-right-radius: var(--card-border-radius);
+    border-radius: var(--card-border-radius);
     background: var(--secondary-300);
     padding: 8px;
     height: var(--card-header-height);
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.graph__task-card--selected .graph__task-card-header {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 .graph__task-card-title {
@@ -121,6 +127,19 @@
     overflow: auto;
     margin: 0;
     margin-top: 8px;
+    flex: 1;
+}
+
+.graph__task-card-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: var(--secondary-300);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--black);
+    margin-left: auto;
 }
 
 .graph__dependency-svg {
