@@ -113,7 +113,7 @@ function TaskDependencies({ tasks, selectedTaskId, widthPx, heightPx }: TaskDepe
     const unselectedDependencies: JSX.Element[] = [];
     const selectedDependencies: JSX.Element[] = [];
 
-    dependencies.forEach(({from, to}) => {
+    dependencies.forEach(({ from, to }) => {
         const selected = selectedTaskId === from || selectedTaskId === to;
 
         const fromTask = tasks.get(from)!;
@@ -149,10 +149,10 @@ function TaskDependencies({ tasks, selectedTaskId, widthPx, heightPx }: TaskDepe
     return (
         <>
             <svg className="graph__dependency-svg" width={widthPx} height={heightPx}>
-                { unselectedDependencies }
+                {unselectedDependencies}
             </svg>
             <svg className="graph__dependency-svg" width={widthPx} height={heightPx}>
-                { selectedDependencies }
+                {selectedDependencies}
             </svg>
         </>
     );
