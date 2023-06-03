@@ -44,7 +44,7 @@ function RegisterPage() {
                 <AuthLabel>Password <input type="password" required ref={passwordRef} /></AuthLabel>
                 <button className="auth-form__submit-button" type="submit" disabled={loading}>Register</button>
             </form>
-            <p className="auth-form__switch-form">Already have an account? <Link to="/login">Login</Link></p>
+            <p className="auth-form__switch-form">Already have an account? <Link to="/login">Log in</Link></p>
         </OverlayCard>
     );
 }
