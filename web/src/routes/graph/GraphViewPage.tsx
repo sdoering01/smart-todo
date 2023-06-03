@@ -23,6 +23,8 @@ const GRAPH_GAP_HORIZONTAL = 80;
 const GRAPH_GAP_VERTICAL = 40;
 const DEPENDENCY_STROKE_WIDTH = 4;
 
+let showMobileWarning = true;
+
 function calcTaskCardPos(level: number, idxInLevel: number) {
     return {
         top: GRAPH_PADDING + idxInLevel * (TASK_CARD_HEIGHT + GRAPH_GAP_VERTICAL),
@@ -31,7 +33,12 @@ function calcTaskCardPos(level: number, idxInLevel: number) {
 }
 
 function GraphMobileHeader() {
-    const [warningShown, setWarningShown] = useState(true);
+    const [warningShown, setWarningShown] = useState(showMobileWarning);
+
+    function closeWarning() {
+        showMobileWarning = false;
+        setWarningShown(false);
+    }
 
     return (
         <header className="graph__mobile-header">
@@ -39,7 +46,7 @@ function GraphMobileHeader() {
                 <div className="graph__mobile-header-warning">
                     <HiOutlineExclamationCircle />
                     <span>The graph view is not optimized for mobile use, consider using a larger screen</span>
-                    <button onClick={() => setWarningShown(false)}><HiXMark /></button>
+                    <button onClick={closeWarning}><HiXMark /></button>
                 </div>
             )}
             <span className="graph__mobile-header__logout-wrapper">
