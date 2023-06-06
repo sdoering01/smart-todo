@@ -16,7 +16,7 @@ export type ApiOptions = {
     token?: string;
 }
 
-export type ApiOptionsFunction = (...args: any[]) => ApiOptions;
+export type ApiOptionsProvider = (...args: any[]) => ApiOptions;
 
 async function fetchApi(options: ApiOptions) {
     const method = options.method ?? "GET";
@@ -80,7 +80,7 @@ type UseApiOptions = {
     initialLoading?: boolean;
 };
 
-export default function useApi<F extends ApiOptionsFunction, R = any>(apiOptionsFunction: F, options: UseApiOptions = {}) {
+export default function useApi<P extends ApiOptionsProvider, R = any>(apiOptionsProvider: P, options: UseApiOptions = {}) {
     const [data, setData] = useState<R | null>(null);
     const [loading, setLoading] = useState(options.initialLoading ?? false);
     const [error, setError] = useState<string | null>(null);
@@ -89,12 +89,12 @@ export default function useApi<F extends ApiOptionsFunction, R = any>(apiOptions
 
     const withAuth = options.withAuth ?? true;
 
-    async function call(...params: Parameters<F>): Promise<{ data: R | null, error: string | null }> {
+    async function call(...params: Parameters<P>): Promise<{ data: R | null, error: string | null }> {
         setLoading(true);
         setData(null);
         setError(null);
 
-        let apiOptions = apiOptionsFunction(...params);
+        let apiOptions = apiOptionsProvider(...params);
         if (withAuth) {
             apiOptions.token = token ?? undefined;
         }
