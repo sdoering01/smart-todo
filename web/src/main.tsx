@@ -101,7 +101,7 @@ const trpcClient =
                 }
             },
             httpLink({
-                url: import.meta.env.VITE_API_URL as string || "http://localhost:3000",
+                url: import.meta.env.VITE_TRPC_ENDPOINT as string || "http://localhost:3000",
                 async headers() {
                     const headers: HTTPHeaders = {};
                     if (globalToken) {
