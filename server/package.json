@@ -7,7 +7,7 @@
         "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
         "build": "tsc",
         "start": "node dist/index.js",
-        "migrate": "node dist/index.js migrate"
+        "migrate": "drizzle-kit generate:pg && tsc && node dist/index.js migrate"
     },
     "author": "Simon Döring",
     "license": "MIT",
