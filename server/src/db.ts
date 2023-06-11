@@ -38,8 +38,59 @@ function prepareNextTasksValues(
     return nextTasksValues;
 }
 
+async function ensureNoCirlces(userId: number, thisDb: typeof db) {
+    function hasCirlce() {
+        const checked = new Set<number>();
+        for (const task of newUserTasks) {
+            if (hasCircleRecursive(graph, [task.id], new Set(), checked)) {
+                return true;
+            }
+        }
+    }
+
+    function hasCircleRecursive(
+        graph: Map<number, Task>,
+        nextIds: number[],
+        path: Set<number> = new Set(),
+        checked: Set<number> = new Set(),
+    ): boolean {
+        for (const nextId of nextIds) {
+            if (checked.has(nextId)) {
+                continue;
+            }
+
+            if (path.has(nextId)) {
+                return true;
+            }
+
+            path.add(nextId);
+            const thisNextIds = graph.get(nextId)!.nextTaskIds;
+
+            if (hasCircleRecursive(graph, thisNextIds, path)) {
+                return true;
+            }
+
+            checked.add(nextId);
+            path.delete(nextId);
+        }
+
+        return false;
+    }
+
+    const newUserTasks = await dbFunctions.tasks.findByUser(userId, thisDb);
+
+    const graph = new Map<number, Task>();
+    for (const task of newUserTasks) {
+        graph.set(task.id, task);
+    }
+
+    if (hasCirlce()) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot create a task that creates a loop" });
+    }
+}
+
 // TODO: Better error handling for database errors
-export default {
+const dbFunctions = {
     migrate: async () => {
         await migrate(db, { migrationsFolder: "./drizzle" });
     },
@@ -115,8 +166,10 @@ export default {
         }
     },
     tasks: {
-        findByUser: async (userId: number): Promise<Task[]> => {
-            const userTasks = await db
+        findByUser: async (userId: number, thisDb: typeof db | null = null): Promise<Task[]> => {
+            // Allow passing in a transaction
+            thisDb = thisDb ?? db;
+            const userTasks = await thisDb
                 .select({
                     id: schema.tasks.id,
                     title: schema.tasks.title,
@@ -163,6 +216,7 @@ export default {
                 });
                 if (nextTasksValues.length > 0) {
                     await tx.insert(schema.nextTasks).values(nextTasksValues);
+                    await ensureNoCirlces(userId, tx);
                 }
 
                 return { ...task, nextTaskIds: input.nextTaskIds || [] };
@@ -207,6 +261,7 @@ export default {
                 });
                 if (nextTasksValues.length > 0) {
                     await tx.insert(schema.nextTasks).values(nextTasksValues);
+                    await ensureNoCirlces(userId, tx);
                 }
 
                 return { ...task, nextTaskIds: input.nextTaskIds || [] };
@@ -230,3 +285,5 @@ export default {
         }
     }
 };
+
+export default dbFunctions;

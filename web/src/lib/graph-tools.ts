@@ -1,45 +1,5 @@
 import { Task, TaskMap } from "./types";
 
-export function isValidGraph(graph: TaskMap): boolean {
-    try {
-        return !hasCircle(graph, getRoodIds(graph));
-    } catch (e) {
-        console.error("Error validating graph:", e);
-        return false;
-    }
-}
-
-/**
- * @param path - Set of ids that have been visited in the current path
- * @param checked - Set of ids that have already been checked
- */
-function hasCircle(graph: TaskMap, nextIds: number[], path: Set<number> = new Set(), checked: Set<number> = new Set()): boolean {
-    for (const nextId of nextIds) {
-        if (checked.has(nextId)) {
-            continue;
-        }
-
-        if (path.has(nextId)) {
-            return true;
-        }
-
-        path.add(nextId);
-        const thisNextIds = graph.get(nextId)?.nextTaskIds;
-        if (thisNextIds == null) {
-            throw new Error(`Task with id ${nextId} does not exist in the graph`);
-        }
-
-        if (hasCircle(graph, thisNextIds, path)) {
-            return true;
-        }
-
-        checked.add(nextId);
-        path.delete(nextId);
-    }
-
-    return false;
-}
-
 export function getRootTasks(graph: TaskMap): Task[] {
     return Array.from(graph.values()).filter(el => el.previousTaskIds.length === 0);
 }

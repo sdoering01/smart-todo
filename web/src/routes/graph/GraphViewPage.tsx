@@ -3,7 +3,7 @@ import { HiCalendarDays, HiOutlineClock, HiOutlineMapPin, HiXMark, HiOutlineExcl
 
 import "./GraphViewPage.css";
 import useTasks from "../../lib/hooks/useTasks";
-import { calcTaskLevels, isValidGraph } from "../../lib/graph-tools";
+import { calcTaskLevels } from "../../lib/graph-tools";
 import { Task } from "../../lib/types";
 import { formatDate } from "../../lib/date-helpers";
 import TaskActionsMenu from "../../components/TaskActionsMenu";
@@ -161,44 +161,34 @@ function TaskDependencies({ tasks, selectedTaskId, widthPx, heightPx }: TaskDepe
 function GraphViewPage() {
     const { tasks } = useTasks();
 
-    const [validGraph, setValidGraph] = useState<boolean | null>(null);
-    const [tasksWithLevel, setTasksWithLevel] = useState<TaskWithLevelMap>(new Map());
+    const [tasksWithLevel, setTasksWithLevel] = useState<TaskWithLevelMap | null>(null);
     const [graphSize, setGraphSize] = useState({ levels: 0, maxTasksInLevel: 0 });
 
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
     useEffect(() => {
-        const valid = isValidGraph(tasks);
-        if (valid) {
-            const taskLevels = calcTaskLevels(tasks);
-            let maxTasksInLevel = 0;
-            const newTasksWithLevel: TaskWithLevelMap = new Map();
-            taskLevels.forEach((tasksInLevel, level) => {
-                tasksInLevel.forEach((taskId, idxInLevel) => {
-                    const task = tasks.get(taskId)!;
-                    newTasksWithLevel.set(taskId, { ...task, level, idxInLevel });
-                })
-                if (tasksInLevel.length > maxTasksInLevel) {
-                    maxTasksInLevel = tasksInLevel.length;
-                }
+        const taskLevels = calcTaskLevels(tasks);
+        let maxTasksInLevel = 0;
+        const newTasksWithLevel: TaskWithLevelMap = new Map();
+        taskLevels.forEach((tasksInLevel, level) => {
+            tasksInLevel.forEach((taskId, idxInLevel) => {
+                const task = tasks.get(taskId)!;
+                newTasksWithLevel.set(taskId, { ...task, level, idxInLevel });
             })
-            setTasksWithLevel(newTasksWithLevel);
-            setGraphSize({ levels: taskLevels.length, maxTasksInLevel });
-        } else {
-            setTasksWithLevel(new Map());
-            setGraphSize({ levels: 0, maxTasksInLevel: 0 });
-        }
-        setValidGraph(valid);
+            if (tasksInLevel.length > maxTasksInLevel) {
+                maxTasksInLevel = tasksInLevel.length;
+            }
+        })
+        setTasksWithLevel(newTasksWithLevel);
+        setGraphSize({ levels: taskLevels.length, maxTasksInLevel });
     }, [tasks]);
 
     function handleUnselectTask() {
         setSelectedTaskId(null);
     }
 
-    if (validGraph === null) {
+    if (tasksWithLevel === null) {
         return <h2>Loading...</h2>;
-    } else if (!validGraph) {
-        return <h2>Graph is invalid</h2>;
     } else {
         // TODO: Catch empty graph case
 
