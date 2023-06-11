@@ -85,7 +85,7 @@ function TaskPicker({ thisTaskId, title, selectedTaskIds, setSelectedTaskIds }: 
 type TaskFormProps = {
     onSubmit: (_taskWithoutId: Omit<Task, "id">) => void,
     loading: boolean,
-    error: string | null,
+    error?: string | null,
     actionName?: string;
     initialTask?: Task,
 };
@@ -119,10 +119,10 @@ function TaskForm({ onSubmit, loading, error, initialTask, actionName }: TaskFor
 
         const taskWithoutId = {
             title: titleRef.current!.value,
-            description: descriptionRef.current!.value || undefined,
-            date: dateRef.current!.value ? new Date(dateRef.current!.value) : undefined,
-            time: timeRef.current!.value || undefined,
-            location: locationRef.current!.value || undefined,
+            description: descriptionRef.current!.value || null,
+            date: dateRef.current!.value ? new Date(dateRef.current!.value) : null,
+            time: timeRef.current!.value || null,
+            location: locationRef.current!.value || null,
             nextTaskIds: nextTaskIds,
             previousTaskIds: previousTaskIds,
         };

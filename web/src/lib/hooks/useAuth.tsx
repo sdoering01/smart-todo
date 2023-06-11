@@ -1,27 +1,40 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 const LOCAL_STORAGE_TOKEN_KEY = "ST_TOKEN";
 
-const AuthContext = createContext<{
+type AuthContextValue = {
     loggedIn: boolean,
     sessionExpired: boolean,
     token: string | null,
     login: (token: string) => void,
     logout: (sessionExpired?: boolean) => void,
-}>({
+}
+
+const AuthContext = createContext<AuthContextValue>({
     loggedIn: false,
     sessionExpired: false,
     token: null,
-    login: (_token: string) => {},
-    logout: (_sessionExpired: boolean = false) => {},
+    login: (_token: string) => { },
+    logout: (_sessionExpired: boolean = false) => { },
 });
+
+
+// Provide these globally so they can be used in the trpc client
+export let globalLogout: AuthContextValue["logout"] | null = null;
+export let globalToken: AuthContextValue["token"] | null = null;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false);
 
     const [loggedIn, setLoggedIn] = useState(false);
     const [sessionExpired, setSessionExpired] = useState(false);
-    const [token, setToken] = useState<string | null>(null);
+    const [token, _setToken] = useState<string | null>(null);
+
+    // This ensures that the global token is always up to date without having to wait for the next render
+    const setToken = useCallback((token: string | null) => {
+        _setToken(token);
+        globalToken = token;
+    }, [_setToken]);
 
     function login(token: string) {
         localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token);
@@ -36,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoggedIn(false);
         setSessionExpired(sessionExpired);
     }
-
+    globalLogout = logout;
 
     useEffect(() => {
         setMounted(true);

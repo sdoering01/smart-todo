@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1686416063024,
+      "tag": "0000_normal_blue_marvel",
+      "breakpoints": false
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1686471293387,
+      "tag": "0001_next_centennial",
+      "breakpoints": false
+    }
+  ]
+}

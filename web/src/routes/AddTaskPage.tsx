@@ -4,36 +4,33 @@ import "./AddTaskPage.css";
 import TaskForm from "../components/TaskForm";
 import useTasks from "../lib/hooks/useTasks";
 import { Task } from "../lib/types";
-import { createTask } from "../lib/api";
-import { formatDateISO } from "../lib/date-helpers";
 import PageCard from "../components/PageCard";
 import PageHeader from "../components/PageHeader";
-import useApi from "../lib/hooks/useApi";
+import { trpc } from "../lib/trpc";
 
 function AddTaskPage() {
     const navigate = useNavigate();
     const { addTask } = useTasks();
-    const { call, loading, error } = useApi(createTask);
+    const apiCreateTask = trpc.createTask.useMutation();
 
 
     async function handleAddTask(taskWithoutId: Omit<Task, "id">) {
-        if (loading) {
+        if (apiCreateTask.isLoading) {
             return;
         }
 
-        const dateString = taskWithoutId.date ? formatDateISO(taskWithoutId.date) : undefined;
-        const { error, data } = await call({ ...taskWithoutId, date: dateString });
-
-        if (error == null) {
-            const newId = data!.created;
-            addTask({ ...taskWithoutId, id: newId });
-            navigate(-1);
-        }
+        apiCreateTask.mutate(taskWithoutId, {
+            onSuccess: (createdTask) => {
+                const newId = createdTask.id;
+                addTask({ ...taskWithoutId, id: newId });
+                navigate(-1);
+            }
+        });
     }
 
     return (
         <PageCard header={<PageHeader startContent={<h1 className="add-task-page__main-title">Add Task</h1>} withBackButton />}>
-            <TaskForm onSubmit={handleAddTask} loading={loading} error={error} actionName="Add" />
+            <TaskForm onSubmit={handleAddTask} loading={apiCreateTask.isLoading} error={apiCreateTask.error?.message} actionName="Add" />
         </PageCard>
     );
 }

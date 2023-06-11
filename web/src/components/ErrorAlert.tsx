@@ -3,7 +3,7 @@ import { HiExclamationCircle } from "react-icons/hi2";
 import "./ErrorAlert.css";
 
 type ErrorAlertProps = {
-    error: string | null;
+    error?: string | null;
     large?: boolean;
 };
 

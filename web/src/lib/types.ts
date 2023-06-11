@@ -1,3 +1,5 @@
+import { Task as ApiTask }  from "../../../server/src/types";
+
 export type ApiLogin = {
     username: string;
     password: string;
@@ -8,35 +10,27 @@ export type ApiRegister = ApiLogin & {
     fullname: string;
 }
 
-export type ApiTask = {
-    id: number;
-    title: string;
-    description?: string;
-    date?: string;  // yyyy-mm-dd (https://en.wikipedia.org/wiki/ISO_8601)
-    time?: string;  // hh:mm
-    location?: string;
-    nextTaskIds: number[];
+export type { ApiTask }
+
+type RawApiTask = Omit<ApiTask, "date"> & {
+    date?: string | null;
 }
 
 // Like ApiTask, but without id (since it's unknown at this point) and with previousTaskIds
 export type ApiCreateTask = Omit<ApiTask, "id"> & { previousTaskIds: number[] };
 
-// Like ApiCreateTask, but may include only some of the fields
-export type ApiUpdateTask = Partial<ApiCreateTask>;
-
-export type Task = Omit<ApiTask, "date"> & {
-    date?: Date;
+export type Task = ApiTask & {
     previousTaskIds: number[];
 };
 
 export type TaskMap = Map<number, Task>;
 
-export function transformApiTasks(apiTasks: ApiTask[]): TaskMap {
+export function transformApiTasks(apiTasks: RawApiTask[]): TaskMap {
     const taskMap: TaskMap = new Map();
     apiTasks.forEach(apiTask => {
         const task = {
             ...apiTask,
-            date: apiTask.date ? new Date(apiTask.date) : undefined,
+            date: apiTask.date ? new Date(apiTask.date) : null,
             previousTaskIds: [],
         };
         taskMap.set(task.id, task);

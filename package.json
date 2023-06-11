@@ -1,0 +1,11 @@
+{
+    "name": "smart-todo",
+    "private": true,
+    "version": "1.0.0",
+    "author": "Simon Döring",
+    "license": "MIT",
+    "workspaces": [
+        "client",
+        "server"
+    ]
+}

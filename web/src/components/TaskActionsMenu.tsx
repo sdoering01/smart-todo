@@ -5,8 +5,7 @@ import { HiEllipsisHorizontal } from "react-icons/hi2";
 import "./TaskActionsMenu.css";
 import useTasks from "../lib/hooks/useTasks";
 import { Task } from "../lib/types";
-import { deleteTask as apiDeleteTask } from "../lib/api";
-import useApi from "../lib/hooks/useApi";
+import { trpc } from "../lib/trpc";
 
 type TaskActionsMenuProps = {
     task: Task;
@@ -18,30 +17,28 @@ type TaskActionsMenuProps = {
 function TaskActionsMenu({ task, openButtonVariant, onSuccessfulDelete, stopClickPropagation }: TaskActionsMenuProps) {
     const { deleteTask } = useTasks();
 
-    const { call, error } = useApi(apiDeleteTask);
+    const apiDeleteTask = trpc.deleteTask.useMutation();
 
     const actionsContainer = useRef<HTMLDivElement | null>(null);
 
     async function handleDelete() {
-        const { error } = await call(task!.id);
-        if (error) {
-            // Handle error in useEffect below, so that token expiration doesn't cause an alert
-            return;
-        }
+        apiDeleteTask.mutate(task.id, {
+            onSuccess: () => {
+                deleteTask(task);
 
-        deleteTask(task!);
-
-        if (onSuccessfulDelete != null) {
-            onSuccessfulDelete();
-        }
+                if (onSuccessfulDelete != null) {
+                    onSuccessfulDelete();
+                }
+            }
+        });
     }
 
     useEffect(() => {
-        if (error !== null) {
-            console.error(error);
-            alert(error);
+        if (apiDeleteTask.error != null) {
+            console.error(apiDeleteTask.error.message);
+            alert(apiDeleteTask.error.message);
         }
-    }, [error]);
+    }, [apiDeleteTask.error]);
 
     return (
         <div className="task-actions-menu" ref={actionsContainer} onClick={stopClickPropagation ? (ev) => ev.stopPropagation() : undefined}>

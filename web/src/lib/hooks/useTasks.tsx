@@ -1,14 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 
-import { fetchAllTasks } from "../api";
+import { trpc } from "../trpc";
 import { Task, TaskMap, transformApiTasks } from "../types";
-import useApi from "./useApi";
 import useAuth from "./useAuth";
 
 const TaskContext = createContext<{
     tasks: TaskMap,
     loading: boolean,
-    error: string | null,
+    error?: string | null,
     addTask: (newTask: Task) => void,
     deleteTask: (toDelete: Task) => void,
     updateTask: (upatedTask: Task) => void,
@@ -62,11 +61,23 @@ function removeTaskId(tasks: TaskMap, taskId: number, nextTaskIds: number[], pre
 type TaskProviderProps = React.PropsWithChildren;
 
 export function TaskProvider(props: TaskProviderProps) {
-    const { loading, error, call } = useApi(fetchAllTasks, { initialLoading: true });
-    const [tasks, setTasks] = useState<TaskMap>(new Map());
-
-
     const { loggedIn } = useAuth();
+
+    const [tasks, setTasks] = useState<TaskMap>(new Map());
+    // Necessasry since we need to transform the tasks from the API. That causes the data to only become available in
+    // the render *after* the query is done, not in the same one. This would cause all child components to render with
+    // an empty task map. To circumvent this problem we defer setting loading to false until the tasks are transformed.
+    const [loading, setLoading] = useState(true);
+
+    const taskList = trpc.taskList.useQuery(undefined, {
+        enabled: loggedIn,
+        onSettled: () => {
+            setLoading(false);
+        },
+        onSuccess: (data) => {
+            setTasks(transformApiTasks(data));
+        },
+    });
 
     const addTask = useCallback((newTask: Task) => {
         setTasks(prev => {
@@ -117,26 +128,17 @@ export function TaskProvider(props: TaskProviderProps) {
         });
     }, [setTasks]);
 
-    async function fetchTasks() {
-        const { error, data } = await call();
-        if (error === null) {
-            const newTasks = transformApiTasks(data);
-            setTasks(newTasks);
-        }
-    }
-
-    useEffect(() => {
-        if (loggedIn) {
-            fetchTasks();
-        }
-    }, [loggedIn]);
-
     return (
         <TaskContext.Provider value={{
-            tasks, loading, error, addTask, deleteTask, updateTask, fetchTasks: () => {
-                if (!loading) {
-                    fetchTasks();
-                }
+            tasks,
+            loading,
+            error: taskList.error?.message,
+            addTask,
+            deleteTask,
+            updateTask,
+            fetchTasks: () => {
+                setLoading(true);
+                taskList.refetch();
             }
         }}>
             {props.children}
